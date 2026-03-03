@@ -16,6 +16,8 @@ int main()
     std::string s;
     std::getline(std::cin, s);
     std::string command = split(s)[0];
+    if (command == "exit")
+      break;
     std::cerr << command << ": command not found\n";
   }
 }
