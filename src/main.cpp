@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 
+#include "utils.hpp"
+
 int main()
 {
   // Flush after every std::cout / std:cerr
@@ -12,7 +14,8 @@ int main()
   {
     std::cout << "$ ";
     std::string s;
-    std::getline(std::cin,s);
-    std::cerr << s << ": command not found\n";
+    std::getline(std::cin, s);
+    std::string command = split(s)[0];
+    std::cerr << command << ": command not found\n";
   }
 }
