@@ -25,7 +25,7 @@ bool command_runner::repl()
 void command_runner::exit(std::string &input)
 {
     if (input != "")
-        std::cout <<input << ": command not found\n";
+        std::cout << input << ": command not found\n";
 
     command_runner::isActive = false;
 }
@@ -34,6 +34,8 @@ void command_runner::echo(std::string &input) { std::cout << input << '\n'; }
 
 void command_runner::type(std::string &input)
 {
+    if (input == "")
+        return;
     auto [cmd, rest] = get_cmd(input);
 
     if (command_runner::cmd_map.contains(cmd))
@@ -41,7 +43,7 @@ void command_runner::type(std::string &input)
         std::cout << cmd << " is a shell builtin\n";
         type(rest);
     }
-    else if(rest != "")
+    else
         std::cout << cmd << ": not found\n";
 }
 
