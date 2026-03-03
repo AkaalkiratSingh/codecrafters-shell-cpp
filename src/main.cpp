@@ -14,11 +14,10 @@ bool repl()
 
   if (cmd == "exit")
     return false;
-
-  if (cmd == "echo")
+  else if (cmd == "echo")
     std::cout << rest << '\n';
-
-  std::cerr << cmd << ": command not found\n";
+  else
+    std::cerr << cmd << ": command not found\n";
 
   return true;
 }
@@ -30,6 +29,6 @@ int main()
   std::cerr << std::unitbuf;
 
   // TODO: Uncomment the code below to pass the first stage
-  while (repl)
+  while (repl())
     ;
 }
