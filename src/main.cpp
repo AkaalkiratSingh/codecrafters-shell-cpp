@@ -8,8 +8,11 @@ int main()
   std::cerr << std::unitbuf;
 
   // TODO: Uncomment the code below to pass the first stage
-  std::cout << "$ ";
-  std::string s;
-  std::cin >> s;
-  std::cerr << s << ": command not found\n";
+  while (true)
+  {
+    std::cout << "$ ";
+    std::string s;
+    std::getline(std::cin,s);
+    std::cerr << s << ": command not found\n";
+  }
 }
