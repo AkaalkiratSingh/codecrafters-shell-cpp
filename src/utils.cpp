@@ -25,3 +25,19 @@ std::vector<std::string> split(std::string &s)
 
     return res;
 }
+
+std::pair<std::string, std::string> get_cmd(std::string &s)
+{
+    std::string t = trim(s);
+
+    int i = 0;
+    while (i < t.size() && t[i] != ' ')
+        i++;
+
+    std::string cmd = t.substr(0, i);
+    std::string rest;
+    if (i < t.size())
+        rest = trim(t.substr(i));
+
+    return {cmd, rest};
+}
