@@ -14,7 +14,7 @@ std::string trim(const std::string &s)
     return s.substr(front, back - front + 1);
 }
 
-std::vector<std::string> split(std::string &s)
+std::vector<std::string> split(const std::string &s)
 {
     std::vector<std::string> res;
     std::stringstream ss(s);
@@ -26,7 +26,7 @@ std::vector<std::string> split(std::string &s)
     return res;
 }
 
-std::pair<std::string, std::string> get_cmd(std::string &s)
+std::pair<std::string, std::string> get_cmd(const std::string &s)
 {
     std::string t = trim(s);
 
