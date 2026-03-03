@@ -16,7 +16,7 @@ bool repl()
     return false;
 
   if (cmd == "echo")
-    std::cout << rest;
+    std::cout << rest << '\n';
 
   std::cerr << cmd << ": command not found\n";
 
