@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include <cstdlib>
 
 bool command_runner::isActive = true;
 std::map<std::string, std::function<void(std::string &)>> command_runner::cmd_map;
@@ -43,24 +44,27 @@ void command_runner::type(std::string &input)
     }
     else
     {
+
         using namespace std::filesystem;
 
-        path p = current_path();
-        while (true)
+        const char *path_env = std::getenv("PATH");
+        if (path_env != nullptr)
         {
-            for (auto &item : directory_iterator(p))
+            std::string path_str(path_env);
+            std::stringstream ss(path_str);
+            std::string dir;
+            while (std::getline(ss, dir, ':'))
             {
-                path p_i = item.path();
-                if (p_i.filename() == cmd && isExecutable(p_i))
+                path full_path = path(dir) / cmd;
+                if (exists(full_path) && is_regular_file(full_path))
                 {
-                    std::cout << p_i << '\n';
-                    return;
+                    if (isExecutable(full_path))
+                    {
+                        std::cout << cmd << " is " << full_path.string() << '\n';
+                        return;
+                    }
                 }
             }
-
-            if (p == p.parent_path())
-                break;
-            p = p.parent_path();
         }
         std::cout << cmd << ": not found\n";
     }
