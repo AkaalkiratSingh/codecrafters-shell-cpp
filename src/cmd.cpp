@@ -29,9 +29,7 @@ void command_runner::exit(std::string &input)
 
     command_runner::isActive = false;
 }
-
 void command_runner::echo(std::string &input) { std::cout << input << '\n'; }
-
 void command_runner::type(std::string &input)
 {
     if (input == "")
@@ -44,12 +42,34 @@ void command_runner::type(std::string &input)
         type(rest);
     }
     else
-        std::cout << cmd << ": not found\n";
-}
+    {
+        using namespace std::filesystem;
 
+        path p = current_path();
+        while (true)
+        {
+            for (auto &item : directory_iterator(p))
+            {
+                path p_i = item.path();
+                if (p_i.filename() == cmd && isExecutable(p_i))
+                {
+                    std::cout << p_i << '\n';
+                    return;
+                }
+            }
+
+            if (p == p.parent_path())
+                break;
+            p = p.parent_path();
+        }
+        std::cout << cmd << ": not found\n";
+    }
+}
+void command_runner::pwd(std::string &input) { std::cout << std::filesystem::current_path() << '\n'; }
 void command_runner::setup()
 {
     cmd_map["echo"] = echo;
     cmd_map["type"] = type;
     cmd_map["exit"] = exit;
+    cmd_map["pwd"] = pwd;
 }
