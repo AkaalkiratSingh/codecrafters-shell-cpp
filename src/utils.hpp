@@ -3,10 +3,10 @@
 #include <filesystem>
 
 #ifdef _WIN32
-    #include <windows.h>
+#include <windows.h>
 #else
-    #include <sys/wait.h>
-    #include <unistd.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #endif
 
 #include <functional>
@@ -18,26 +18,28 @@
 #include <vector>
 #include <map>
 
-std::string trim(const std::string &s);
-std::vector<std::string> split(const std::string &s);
-std::pair<std::string, std::string> get_cmd(const std::string &s);
+using str = std::string;
+
+str trim(const str &s);
+std::vector<str> split(const str &s);
+std::pair<str, str> get_cmd(const str &s);
 
 bool isExecutable(std::filesystem::path &item);
-std::string get_executable_path(const std::string &cmd);
+str get_executable_path(const str &cmd);
 
 class command_runner
 {
 
     // Built_In commands
-    static void exit(std::string &input);
-    static void echo(std::string &input);
-    static void type(std::string &input);
-    static void pwd(std::string &input);
+    static void exit(str &input);
+    static void echo(str &input);
+    static void type(str &input);
+    static void pwd(str &input);
 
 public:
     static bool isActive;
 
-    static std::map<std::string, std::function<void(std::string &)>> cmd_map;
+    static std::map<str, std::function<void(str &)>> cmd_map;
 
     static bool repl();
     static void setup();

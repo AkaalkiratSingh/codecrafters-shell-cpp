@@ -1,16 +1,16 @@
 #include "utils.hpp"
 #include <cstdlib>
 
-void execute_external(const std::string &exec_path, const std::string &cmd, const std::string &rest);
+void execute_external(const str &exec_path, const str &cmd, const str &rest);
 
 bool command_runner::isActive = true;
-std::map<std::string, std::function<void(std::string &)>> command_runner::cmd_map;
+std::map<str, std::function<void(str &)>> command_runner::cmd_map;
 
 bool command_runner::repl()
 {
     std::cout << "$ ";
 
-    std::string s;
+    str s;
     if (!std::getline(std::cin, s))
     {
         return false;
@@ -31,7 +31,7 @@ bool command_runner::repl()
     }
     else
     {
-        std::string exec_path = get_executable_path(cmd);
+        str exec_path = get_executable_path(cmd);
         if (!exec_path.empty())
             execute_external(exec_path, cmd, rest);
         else
@@ -40,16 +40,16 @@ bool command_runner::repl()
     return isActive;
 }
 
-void command_runner::exit(std::string &input)
+void command_runner::exit(str &input)
 {
     if (input != "")
         std::cout << input << ": command not found\n";
 
     command_runner::isActive = false;
 }
-void command_runner::echo(std::string &input) { std::cout << input << '\n'; }
+void command_runner::echo(str &input) { std::cout << input << '\n'; }
 
-void command_runner::type(std::string &input)
+void command_runner::type(str &input)
 {
     if (input.empty())
         return;
@@ -60,7 +60,7 @@ void command_runner::type(std::string &input)
         std::cout << cmd << " is a shell builtin\n";
     else
     {
-        std::string exec_path = get_executable_path(cmd);
+        str exec_path = get_executable_path(cmd);
         if (!exec_path.empty())
             std::cout << cmd << " is " << exec_path << '\n';
         else
@@ -71,7 +71,7 @@ void command_runner::type(std::string &input)
         type(rest);
 }
 
-void command_runner::pwd(std::string &input) { std::cout << std::filesystem::current_path() << '\n'; }
+void command_runner::pwd(str &input) { std::cout << std::filesystem::current_path() << '\n'; }
 
 void command_runner::setup()
 {
@@ -82,11 +82,11 @@ void command_runner::setup()
 }
 
 // Update the signature to accept the resolved exec_path
-void execute_external(const std::string &exec_path, const std::string &cmd, const std::string &rest)
+void execute_external(const str &exec_path, const str &cmd, const str &rest)
 {
 #ifdef _WIN32
     // Windows Implementation
-    std::string command_line = exec_path; // Use the resolved path!
+    str command_line = exec_path; // Use the resolved path!
     if (!rest.empty())
         command_line += " " + rest;
 
@@ -112,11 +112,11 @@ void execute_external(const std::string &exec_path, const std::string &cmd, cons
 
 #else
     // Linux/macOS Implementation
-    std::string full_cmd = cmd;
+    str full_cmd = cmd;
     if (!rest.empty())
         full_cmd += " " + rest;
 
-    std::vector<std::string> string_args = split(full_cmd);
+    std::vector<str> string_args = split(full_cmd);
     std::vector<char *> args;
 
     for (auto &s : string_args)

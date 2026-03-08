@@ -1,6 +1,6 @@
 #include "utils.hpp"
 
-std::string trim(const std::string &s)
+str trim(const str &s)
 {
     int front = 0;
     int back = s.size() - 1;
@@ -13,11 +13,11 @@ std::string trim(const std::string &s)
     return s.substr(front, back - front + 1);
 }
 
-std::vector<std::string> split(const std::string &s)
+std::vector<str> split(const str &s)
 {
-    std::vector<std::string> res;
+    std::vector<str> res;
     std::stringstream ss(s);
-    std::string word;
+    str word;
 
     while (ss >> word)
         res.push_back(word);
@@ -25,10 +25,8 @@ std::vector<std::string> split(const std::string &s)
     return res;
 }
 
-std::pair<std::string, std::string> get_cmd(const std::string &s)
+std::pair<str, str> get_cmd(const str &s)
 {
-    typedef std::string str;
-
     str t = trim(s);
 
     int i = 0;
@@ -56,10 +54,9 @@ bool isExecutable(std::filesystem::path &item)
         return false;
 
 #ifdef _WIN32
-    // Windows: If it's a regular file in PATH, we assume it's executable.
     return true;
 #else
-    // Linux/macOS: Check POSIX executable permissions
+    
     auto prms = std::filesystem::status(item, ec).permissions();
     auto exec_mask = std::filesystem::perms::owner_exec |
                      std::filesystem::perms::group_exec |
@@ -68,21 +65,21 @@ bool isExecutable(std::filesystem::path &item)
 #endif
 }
 
-std::string get_executable_path(const std::string &cmd)
+str get_executable_path(const str &cmd)
 {
     const char *path_env = std::getenv("PATH");
     if (!path_env)
         return "";
 
     std::stringstream ss(path_env);
-    std::string dir;
+    str dir;
 
     while (std::getline(ss, dir, PATH_DELIMITER))
     {
         std::filesystem::path full_path = std::filesystem::path(dir) / cmd;
 
 #ifdef _WIN32
-        // Windows: Check exact name, then try appending ".exe"
+        
         if (isExecutable(full_path))
             return full_path.string();
 
@@ -90,7 +87,6 @@ std::string get_executable_path(const std::string &cmd)
         if (isExecutable(exe_path))
             return exe_path.string();
 #else
-        // Linux: Just check the exact name with permissions
         if (isExecutable(full_path))
             return full_path.string();
 #endif
