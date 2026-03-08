@@ -71,7 +71,7 @@ void command_runner::type(str &input)
         type(rest);
 }
 
-void command_runner::pwd(str &input) { std::cout << std::filesystem::current_path() << '\n'; }
+void command_runner::pwd(str &input) { std::cout << std::filesystem::current_path().string() << '\n'; }
 
 void command_runner::setup()
 {
