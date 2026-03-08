@@ -1,6 +1,9 @@
 #pragma once
 
 #include <filesystem>
+// #include <sys/wait.h>
+// #include <unistd.h>
+#include <windows.h>
 
 #include <functional>
 
@@ -14,7 +17,9 @@
 std::string trim(const std::string &s);
 std::vector<std::string> split(const std::string &s);
 std::pair<std::string, std::string> get_cmd(const std::string &s);
+
 bool isExecutable(std::filesystem::path &item);
+std::string get_executable_path(const std::string &cmd);
 
 class command_runner
 {
