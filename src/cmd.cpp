@@ -1,6 +1,8 @@
 #include "utils.hpp"
 #include <cstdlib>
 
+void execute_external(const std::string &exec_path, const std::string &cmd, const std::string &rest);
+
 bool command_runner::isActive = true;
 std::map<std::string, std::function<void(std::string &)>> command_runner::cmd_map;
 
@@ -9,17 +11,32 @@ bool command_runner::repl()
     std::cout << "$ ";
 
     std::string s;
-    std::getline(std::cin, s);
+    if (!std::getline(std::cin, s))
+    {
+        return false;
+    }
+
+    if (s.empty())
+        return isActive;
 
     auto [cmd, rest] = get_cmd(s);
+
+    if (cmd.empty())
+        return isActive;
+
     if (cmd_map.contains(cmd))
     {
         auto func = cmd_map[cmd];
         func(rest);
     }
     else
-        std::cout << cmd << ": command not found\n";
-
+    {
+        std::string exec_path = get_executable_path(cmd);
+        if (!exec_path.empty())
+            execute_external(exec_path, cmd, rest);
+        else
+            std::cout << cmd << ": command not found\n";
+    }
     return isActive;
 }
 
@@ -64,14 +81,12 @@ void command_runner::setup()
     cmd_map["pwd"] = pwd;
 }
 
-
-void execute_external(const std::string &cmd, const std::string &rest)
+// Update the signature to accept the resolved exec_path
+void execute_external(const std::string &exec_path, const std::string &cmd, const std::string &rest)
 {
 #ifdef _WIN32
-    // ==========================================
-    // WINDOWS IMPLEMENTATION
-    // ==========================================
-    std::string command_line = cmd;
+    // Windows Implementation
+    std::string command_line = exec_path; // Use the resolved path!
     if (!rest.empty())
         command_line += " " + rest;
 
@@ -96,14 +111,11 @@ void execute_external(const std::string &cmd, const std::string &rest)
     }
 
 #else
-    // ==========================================
-    // LINUX / MACOS (POSIX) IMPLEMENTATION
-    // ==========================================
+    // Linux/macOS Implementation
     std::string full_cmd = cmd;
     if (!rest.empty())
         full_cmd += " " + rest;
 
-    // Using your split utility
     std::vector<std::string> string_args = split(full_cmd);
     std::vector<char *> args;
 
@@ -117,14 +129,14 @@ void execute_external(const std::string &cmd, const std::string &rest)
 
     if (pid == 0)
     {
-        // Child process
-        execvp(args[0], args.data());
+        // Use execv (no 'p') and pass the exact path we found
+        execv(exec_path.c_str(), args.data());
+
         std::cout << cmd << ": command not found\n";
         std::exit(1);
     }
     else if (pid > 0)
     {
-        // Parent process
         int status;
         waitpid(pid, &status, 0);
     }
