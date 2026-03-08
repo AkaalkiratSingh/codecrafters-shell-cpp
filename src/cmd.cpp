@@ -64,44 +64,73 @@ void command_runner::setup()
     cmd_map["pwd"] = pwd;
 }
 
+
 void execute_external(const std::string &cmd, const std::string &rest)
 {
-    std::string fullCmd = cmd;
+#ifdef _WIN32
+    // ==========================================
+    // WINDOWS IMPLEMENTATION
+    // ==========================================
+    std::string command_line = cmd;
     if (!rest.empty())
-        fullCmd += " " + rest;
+        command_line += " " + rest;
 
     STARTUPINFOA si;
     PROCESS_INFORMATION pi;
-
     ZeroMemory(&si, sizeof(si));
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
 
-    std::vector<char> cmd_buffer(fullCmd.begin(), fullCmd.end());
+    std::vector<char> cmd_buffer(command_line.begin(), command_line.end());
     cmd_buffer.push_back('\0');
 
-    if (CreateProcessA(
-            NULL,              // Application name (NULL means use command line)
-            cmd_buffer.data(), // Command line string
-            NULL,              // Process handle not inheritable
-            NULL,              // Thread handle not inheritable
-            FALSE,             // Set handle inheritance to FALSE
-            0,                 // No creation flags
-            NULL,              // Use parent's environment block
-            NULL,              // Use parent's starting directory
-            &si,               // Pointer to STARTUPINFO structure
-            &pi                // Pointer to PROCESS_INFORMATION structure
-            ))
+    if (CreateProcessA(NULL, cmd_buffer.data(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
     {
-        // --- PARENT PROCESS ---
-        // Wait for the child process to finish
         WaitForSingleObject(pi.hProcess, INFINITE);
-
-        // Close handles to avoid memory leaks
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
     }
     else
+    {
         std::cout << cmd << ": command not found\n";
-    
+    }
+
+#else
+    // ==========================================
+    // LINUX / MACOS (POSIX) IMPLEMENTATION
+    // ==========================================
+    std::string full_cmd = cmd;
+    if (!rest.empty())
+        full_cmd += " " + rest;
+
+    // Using your split utility
+    std::vector<std::string> string_args = split(full_cmd);
+    std::vector<char *> args;
+
+    for (auto &s : string_args)
+    {
+        args.push_back(const_cast<char *>(s.c_str()));
+    }
+    args.push_back(nullptr);
+
+    pid_t pid = fork();
+
+    if (pid == 0)
+    {
+        // Child process
+        execvp(args[0], args.data());
+        std::cout << cmd << ": command not found\n";
+        std::exit(1);
+    }
+    else if (pid > 0)
+    {
+        // Parent process
+        int status;
+        waitpid(pid, &status, 0);
+    }
+    else
+    {
+        std::cerr << "Fork failed\n";
+    }
+#endif
 }

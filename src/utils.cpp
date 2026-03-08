@@ -43,44 +43,57 @@ std::pair<std::string, std::string> get_cmd(const std::string &s)
     return {cmd, rest};
 }
 
+#ifdef _WIN32
+const char PATH_DELIMITER = ';';
+#else
+const char PATH_DELIMITER = ':';
+#endif
+
 bool isExecutable(std::filesystem::path &item)
 {
     std::error_code ec;
-    // Just check if it's a regular file. On Windows, if it's an .exe and it exists,
-    // it's generally considered executable.
-    return std::filesystem::is_regular_file(item, ec);
+    if (!std::filesystem::is_regular_file(item, ec))
+        return false;
+
+#ifdef _WIN32
+    // Windows: If it's a regular file in PATH, we assume it's executable.
+    return true;
+#else
+    // Linux/macOS: Check POSIX executable permissions
+    auto prms = std::filesystem::status(item, ec).permissions();
+    auto exec_mask = std::filesystem::perms::owner_exec |
+                     std::filesystem::perms::group_exec |
+                     std::filesystem::perms::others_exec;
+    return (prms & exec_mask) != std::filesystem::perms::none;
+#endif
 }
 
 std::string get_executable_path(const std::string &cmd)
 {
-    using namespace std;
-    using namespace std::filesystem;
-
-    const char *path_env = getenv("PATH");
+    const char *path_env = std::getenv("PATH");
     if (!path_env)
         return "";
 
-    stringstream ss(path_env);
-    string dir;
+    std::stringstream ss(path_env);
+    std::string dir;
 
-    while (getline(ss, dir, ';'))
+    while (std::getline(ss, dir, PATH_DELIMITER))
     {
-        // Check both the raw command (e.g., "ping.exe") and the appended extension ("ping" -> "ping.exe")
-        std::vector<std::string> to_check = { cmd };
-        
-        // If the command doesn't already end in .exe, try appending it
-        if (cmd.length() < 4 || cmd.substr(cmd.length() - 4) != ".exe") {
-            to_check.push_back(cmd + ".exe");
-        }
+        std::filesystem::path full_path = std::filesystem::path(dir) / cmd;
 
-        for (const auto& file_name : to_check) {
-            std::filesystem::path full_path = std::filesystem::path(dir) / file_name;
+#ifdef _WIN32
+        // Windows: Check exact name, then try appending ".exe"
+        if (isExecutable(full_path))
+            return full_path.string();
 
-            if (isExecutable(full_path))
-            {
-                return full_path.string();
-            }
-        }
+        std::filesystem::path exe_path = full_path.string() + ".exe";
+        if (isExecutable(exe_path))
+            return exe_path.string();
+#else
+        // Linux: Just check the exact name with permissions
+        if (isExecutable(full_path))
+            return full_path.string();
+#endif
     }
     return "";
 }
