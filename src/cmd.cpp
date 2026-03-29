@@ -77,11 +77,16 @@ void command_runner::cd(str &input)
 {
     try
     {
+        if (input == "~")
+        {
+            char *home_ = std::getenv("HOME");
+            input = home_;
+        }
         std::filesystem::current_path(input);
     }
-    catch(const std::exception& e)
+    catch (const std::exception &e)
     {
-        std::cerr <<"cd: " << input <<": No such file or directory" << '\n';
+        std::cerr << "cd: " << input << ": No such file or directory" << '\n';
     }
 }
 
