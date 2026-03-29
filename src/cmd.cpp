@@ -81,7 +81,7 @@ void command_runner::cd(str &input)
     }
     catch(const std::exception& e)
     {
-        std::cerr <<"cd : " << input <<": No such file or directory" << '\n';
+        std::cerr <<"cd: " << input <<": No such file or directory" << '\n';
     }
 }
 
