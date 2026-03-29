@@ -35,6 +35,7 @@ class command_runner
     static void echo(str &input);
     static void type(str &input);
     static void pwd(str &input);
+    static void cd(str &input);
 
 public:
     static bool isActive;

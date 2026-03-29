@@ -73,12 +73,25 @@ void command_runner::type(str &input)
 
 void command_runner::pwd(str &input) { std::cout << std::filesystem::current_path() << '\n'; }
 
+void command_runner::cd(str &input)
+{
+    try
+    {
+        std::filesystem::current_path(input);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr <<"cd : " << input <<": No such file or directory" << '\n';
+    }
+}
+
 void command_runner::setup()
 {
     cmd_map["echo"] = echo;
     cmd_map["type"] = type;
     cmd_map["exit"] = exit;
     cmd_map["pwd"] = pwd;
+    cmd_map["cd"] = cd;
 }
 
 // Update the signature to accept the resolved exec_path
