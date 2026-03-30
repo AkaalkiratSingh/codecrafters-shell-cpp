@@ -5,16 +5,13 @@
 #include <functional>
 
 #include <string>
-// #include <sstream>
-// #include <iostream>
-
-// #include <vector>
 #include <map>
 
 using str = std::string;
 
 str trim(const str &s);
 std::vector<str> split(const str &s);
+str echofi(const str &s);
 std::pair<str, str> get_cmd(const str &s);
 
 bool isExecutable(std::filesystem::path &item);
@@ -22,7 +19,6 @@ str get_executable_path(const str &cmd);
 
 class command_runner
 {
-
     // Built_In commands
     static void exit(str &input);
     static void echo(str &input);

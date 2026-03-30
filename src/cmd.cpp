@@ -62,7 +62,7 @@ void command_runner::exit(str &input)
 
     command_runner::isActive = false;
 }
-void command_runner::echo(str &input) { std::cout << input << '\n'; }
+void command_runner::echo(str &input) { std::cout << echofi(input) << '\n'; }
 
 void command_runner::type(str &input)
 {

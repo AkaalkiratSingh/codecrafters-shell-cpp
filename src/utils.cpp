@@ -19,11 +19,11 @@ str trim(const str &s)
 
 std::vector<str> split(const str &s)
 {
-    str t = s + ' ';
+    str t = ' ' + s + ' ';
     std::vector<str> res;
     str cur;
 
-    int i = 0;
+    int i = 1;
     enum state
     {
         READING,
@@ -31,16 +31,7 @@ std::vector<str> split(const str &s)
         WHITE_SPACE
     };
 
-    state currentState;
-    if (std::isspace(t[i]))
-        currentState = WHITE_SPACE;
-    else if (t[i] == '\'')
-    {
-        currentState = IN_QUOTES;
-        i++;
-    }
-    else
-        currentState = READING;
+    state currentState = WHITE_SPACE;
 
     while (i < t.size())
     {
@@ -90,9 +81,25 @@ std::vector<str> split(const str &s)
 
         i++;
     }
-    if (currentState == IN_QUOTES){
+    if (currentState == IN_QUOTES)
+    {
         cur.pop_back();
         res.push_back(cur);
+    }
+    return res;
+}
+
+str echofi(const str &s)
+{
+    str t = trim(s);
+    str res;
+    for (char c : t)
+    {
+        if (c == '\'')
+            continue;
+        if (c == ' ' && res.back() == ' ')
+            continue;
+        res.push_back(c);
     }
     return res;
 }
