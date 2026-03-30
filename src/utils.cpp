@@ -1,5 +1,9 @@
 #include "utils.hpp"
 
+#include <cctype>
+#include <string>
+#include <filesystem>
+
 str trim(const str &s)
 {
     int front = 0;
@@ -15,13 +19,81 @@ str trim(const str &s)
 
 std::vector<str> split(const str &s)
 {
+    str t = s + ' ';
     std::vector<str> res;
-    std::stringstream ss(s);
-    str word;
+    str cur;
 
-    while (ss >> word)
-        res.push_back(word);
+    int i = 0;
+    enum state
+    {
+        READING,
+        IN_QUOTES,
+        WHITE_SPACE
+    };
 
+    state currentState;
+    if (std::isspace(t[i]))
+        currentState = WHITE_SPACE;
+    else if (t[i] == '\'')
+    {
+        currentState = IN_QUOTES;
+        i++;
+    }
+    else
+        currentState = READING;
+
+    while (i < t.size())
+    {
+        switch (currentState)
+        {
+        case READING:
+            if (std::isspace(t[i]))
+            {
+                res.push_back(cur);
+                cur.clear();
+
+                currentState = WHITE_SPACE;
+            }
+            else if (t[i] == '\'')
+            {
+                res.push_back(cur);
+                cur.clear();
+
+                currentState = IN_QUOTES;
+            }
+            else
+                cur.push_back(t[i]);
+            break;
+
+        case IN_QUOTES:
+            if (t[i] == '\'')
+            {
+                res.push_back(cur);
+                cur.clear();
+
+                currentState = WHITE_SPACE;
+            }
+            else
+                cur.push_back(t[i]);
+            break;
+
+        case WHITE_SPACE:
+            if (t[i] == '\'')
+                currentState = IN_QUOTES;
+            else if (!std::isspace(t[i]))
+            {
+                cur.push_back(t[i]);
+                currentState = READING;
+            }
+            break;
+        }
+
+        i++;
+    }
+    if (currentState == IN_QUOTES){
+        cur.pop_back();
+        res.push_back(cur);
+    }
     return res;
 }
 
@@ -56,7 +128,6 @@ bool isExecutable(std::filesystem::path &item)
 #ifdef _WIN32
     return true;
 #else
-    
     auto prms = std::filesystem::status(item, ec).permissions();
     auto exec_mask = std::filesystem::perms::owner_exec |
                      std::filesystem::perms::group_exec |
@@ -79,7 +150,6 @@ str get_executable_path(const str &cmd)
         std::filesystem::path full_path = std::filesystem::path(dir) / cmd;
 
 #ifdef _WIN32
-        
         if (isExecutable(full_path))
             return full_path.string();
 

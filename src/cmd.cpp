@@ -1,5 +1,20 @@
 #include "utils.hpp"
+
+#include <iostream>
 #include <cstdlib>
+
+#include <filesystem>
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <sys/wait.h>
+#include <unistd.h>
+#endif
+
+#include <string>
+
+#include <functional>
+#include <map>
 
 void execute_external(const str &exec_path, const str &cmd, const str &rest);
 
@@ -75,18 +90,25 @@ void command_runner::pwd(str &input) { std::cout << std::filesystem::current_pat
 
 void command_runner::cd(str &input)
 {
+    auto splt = split(input);
+    if (splt.size() > 1)
+    {
+        std::cerr << "cd: too many arguments\n";
+        return;
+    }
+
     try
     {
-        if (input == "~")
+        if (splt[0] == "~")
         {
             char *home_ = std::getenv("HOME");
-            input = home_;
+            splt[0] = home_;
         }
-        std::filesystem::current_path(input);
+        std::filesystem::current_path(splt[0]);
     }
     catch (const std::exception &e)
     {
-        std::cerr << "cd: " << input << ": No such file or directory" << '\n';
+        std::cerr << "cd: " << splt[0] << ": No such file or directory\n";
     }
 }
 

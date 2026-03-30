@@ -1,5 +1,7 @@
 #include "utils.hpp"
 
+#include <iostream>
+
 int main()
 {
   // Flush after every std::cout / std:cerr
@@ -9,5 +11,4 @@ int main()
   command_runner::setup();
   while (command_runner::repl())
     ;
-
 }
