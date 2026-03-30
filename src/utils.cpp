@@ -93,12 +93,17 @@ str echofi(const str &s)
 {
     str t = trim(s);
     str res;
+    bool inQuote = false;
     for (char c : t)
     {
         if (c == '\'')
+        {
+            inQuote = !inQuote;
             continue;
-        if (c == ' ' && res.back() == ' ')
+        }
+        if (c == ' ' && !inQuote && res.back() == ' ')
             continue;
+
         res.push_back(c);
     }
     return res;
