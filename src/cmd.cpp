@@ -159,7 +159,10 @@ void execute_external(const str &exec_path, const str &cmd, const str &rest)
     if (!rest.empty())
         full_cmd += " " + rest;
 
-    std::vector<str> string_args = split(full_cmd);
+    auto tkns = tokenize(full_cmd);
+    std::vector<str> string_args;
+    for (const auto &t : tkns)
+        string_args.push_back(t.raw);
     std::vector<char *> args;
 
     for (auto &s : string_args)
