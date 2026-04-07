@@ -98,7 +98,7 @@ std::vector<Token> tokenize(const str &s)
                 cur.push_back(t[i]);
                 currentState = DEF;
             }
-            else if (!cur.empty())
+            else if (!res.empty())
                 res.back().isTerminated = true;
             break;
         }
