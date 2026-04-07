@@ -199,6 +199,5 @@ str get_executable_path(const str &cmd)
         if (isExecutable(full_path))
             return full_path.string();
 #endif
-    }
-    return "";
+    }return "";
 }
