@@ -61,6 +61,8 @@ std::vector<Token> tokenize(const str &s)
                 cur.clear();
                 currentState = DBL_Q;
             }
+            else if (t[i] == '\\')
+                cur.push_back(t[++i]);
             else
                 cur.push_back(t[i]);
             break;
@@ -122,11 +124,13 @@ str echofi(const str &s)
     str res;
 
     int n = tkns.size();
-    for(int i = 0;i<n;i++){
+    for (int i = 0; i < n; i++)
+    {
         res += tkns[i].raw;
-        if(tkns[i].isTerminated)res.push_back(' ');
+        if (tkns[i].isTerminated)
+            res.push_back(' ');
     }
-    
+
     return res;
 }
 
