@@ -42,6 +42,7 @@ std::vector<Token> tokenize(const str &s)
             if (std::isspace(t[i]))
             {
                 Token temp(cur, DEFAULT);
+                temp.isTerminated = true;
                 res.push_back(temp);
                 cur.clear();
                 currentState = WHITE;
