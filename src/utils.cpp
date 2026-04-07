@@ -98,6 +98,8 @@ std::vector<Token> tokenize(const str &s)
                 currentState = DBL_Q;
             else if (!std::isspace(t[i]))
             {
+                if (t[i] == '\\')
+                    i++;
                 cur.push_back(t[i]);
                 currentState = DEF;
             }
