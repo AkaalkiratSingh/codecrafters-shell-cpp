@@ -17,95 +17,115 @@ str trim(const str &s)
     return s.substr(front, back - front + 1);
 }
 
-std::vector<str> split(const str &s)
+std::vector<Token> tokenize(const str &s)
 {
     str t = ' ' + s + ' ';
-    std::vector<str> res;
+    std::vector<Token> res;
     str cur;
 
     int i = 1;
     enum state
     {
-        READING,
-        IN_QUOTES,
-        WHITE_SPACE
+        DEF,
+        SIN_Q,
+        DBL_Q,
+        WHITE
     };
 
-    state currentState = WHITE_SPACE;
+    state currentState = WHITE;
 
     while (i < t.size())
     {
         switch (currentState)
         {
-        case READING:
+        case DEF:
             if (std::isspace(t[i]))
             {
-                res.push_back(cur);
+                Token temp(cur, DEFAULT);
+                res.push_back(temp);
                 cur.clear();
-
-                currentState = WHITE_SPACE;
+                currentState = WHITE;
             }
             else if (t[i] == '\'')
             {
-                res.push_back(cur);
+                Token temp(cur, DEFAULT);
+                res.push_back(temp);
                 cur.clear();
-
-                currentState = IN_QUOTES;
+                currentState = SIN_Q;
+            }
+            else if (t[i] == '\"')
+            {
+                Token temp(cur, DEFAULT);
+                res.push_back(temp);
+                cur.clear();
+                currentState = DBL_Q;
             }
             else
                 cur.push_back(t[i]);
             break;
 
-        case IN_QUOTES:
+        case SIN_Q:
             if (t[i] == '\'')
             {
-                res.push_back(cur);
+                Token temp(cur, DEFAULT);
+                res.push_back(temp);
                 cur.clear();
-
-                currentState = WHITE_SPACE;
+                currentState = WHITE;
             }
             else
                 cur.push_back(t[i]);
             break;
 
-        case WHITE_SPACE:
+        case DBL_Q:
+            if (t[i] == '\"')
+            {
+                Token temp(cur, DEFAULT);
+                res.push_back(temp);
+                cur.clear();
+                currentState = WHITE;
+            }
+            else
+                cur.push_back(t[i]);
+            break;
+
+        case WHITE:
             if (t[i] == '\'')
-                currentState = IN_QUOTES;
+                currentState = SIN_Q;
+            else if (t[i] == '\"')
+                currentState = DBL_Q;
             else if (!std::isspace(t[i]))
             {
                 cur.push_back(t[i]);
-                currentState = READING;
+                currentState = DEF;
             }
+            else if (!cur.empty())
+                res.back().isTerminated = true;
             break;
         }
-
         i++;
     }
-    if (currentState == IN_QUOTES)
+
+    if (currentState == SIN_Q || currentState == DBL_Q)
     {
         cur.pop_back();
-        res.push_back(cur);
+        Token temp(cur, DEFAULT);
+        res.push_back(temp);
+        cur.clear();
     }
     return res;
 }
 
 str echofi(const str &s)
 {
-    str t = trim(s);
+    auto tkns = tokenize(s);
     str res;
-    bool inQuote = false;
-    for (char c : t)
-    {
-        if (c == '\'')
-        {
-            inQuote = !inQuote;
-            continue;
-        }
-        if (c == ' ' && !inQuote && res.back() == ' ')
-            continue;
 
-        res.push_back(c);
+    int n = tkns.size();
+    for(int i = 0;i<n;i++){
+        res += tkns[i].raw;
+        if(tkns[i].isTerminated)res.push_back(' ');
     }
+    
     return res;
 }
 

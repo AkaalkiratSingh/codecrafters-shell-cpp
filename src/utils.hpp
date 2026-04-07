@@ -7,10 +7,10 @@
 #include <string>
 #include <map>
 
-using str = std::string;
+typedef std::string str;
 
 str trim(const str &s);
-std::vector<str> split(const str &s);
+// std::vector<str> split(const str &s);
 str echofi(const str &s);
 std::pair<str, str> get_cmd(const str &s);
 
@@ -34,3 +34,33 @@ public:
     static bool repl();
     static void setup();
 };
+
+enum TokenType
+{
+    DEFAULT,
+    SINGLE_QUOTES,
+    DOUBLE_QUOTES
+};
+
+struct Token
+{
+    bool isTerminated;
+    TokenType type;
+    str raw;
+
+    Token(str raw)
+    {
+        this->raw = raw;
+        type = DEFAULT;
+        isTerminated = false;
+    }
+
+    Token(str raw, TokenType mine)
+    {
+        this->raw = raw;
+        type = mine;
+        isTerminated = false;
+    }
+};
+
+std::vector<Token> tokenize(const str &s);

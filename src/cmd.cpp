@@ -4,6 +4,7 @@
 #include <cstdlib>
 
 #include <filesystem>
+
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -66,49 +67,50 @@ void command_runner::echo(str &input) { std::cout << echofi(input) << '\n'; }
 
 void command_runner::type(str &input)
 {
-    if (input.empty())
-        return;
 
-    auto [cmd, rest] = get_cmd(input);
-
-    if (command_runner::cmd_map.contains(cmd))
-        std::cout << cmd << " is a shell builtin\n";
-    else
+    auto tkns = tokenize(input);
+    for (const auto &tkn : tkns)
     {
-        str exec_path = get_executable_path(cmd);
-        if (!exec_path.empty())
-            std::cout << cmd << " is " << exec_path << '\n';
-        else
-            std::cout << cmd << ": not found\n";
-    }
+        str cmd = tkn.raw;
 
-    if (!rest.empty())
-        type(rest);
+        if (command_runner::cmd_map.contains(cmd))
+            std::cout << cmd << " is a shell builtin\n";
+        else
+        {
+            str exec_path = get_executable_path(cmd);
+            if (!exec_path.empty())
+                std::cout << cmd << " is " << exec_path << '\n';
+            else
+                std::cout << cmd << ": not found\n";
+        }
+    }
 }
 
 void command_runner::pwd(str &input) { std::cout << std::filesystem::current_path().string() << '\n'; }
 
 void command_runner::cd(str &input)
 {
-    auto splt = split(input);
+    auto splt = tokenize(input);
     if (splt.size() > 1)
     {
         std::cerr << "cd: too many arguments\n";
         return;
     }
 
+    str target = splt[0].raw;
+
     try
     {
-        if (splt[0] == "~")
+        if (target == "~")
         {
             char *home_ = std::getenv("HOME");
-            splt[0] = home_;
+            target = home_;
         }
-        std::filesystem::current_path(splt[0]);
+        std::filesystem::current_path(target);
     }
     catch (const std::exception &e)
     {
-        std::cerr << "cd: " << splt[0] << ": No such file or directory\n";
+        std::cerr << "cd: " << target << ": No such file or directory\n";
     }
 }
 
@@ -124,6 +126,7 @@ void command_runner::setup()
 // Update the signature to accept the resolved exec_path
 void execute_external(const str &exec_path, const str &cmd, const str &rest)
 {
+
 #ifdef _WIN32
     // Windows Implementation
     str command_line = exec_path; // Use the resolved path!
