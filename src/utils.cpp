@@ -122,35 +122,28 @@ std::vector<Token> tokenize(const str &s)
     return res;
 }
 
-str echofi(const str &s)
+str echofi(const str &s) { return stringify(tokenize(s)); }
+
+str stringify(const std::vector<Token> &tkns, int x = 0)
 {
-    auto tkns = tokenize(s);
     str res;
 
-    int n = tkns.size();
-    for (int i = 0; i < n; i++)
+    for (int i = x; i < tkns.size(); i++)
     {
         res += tkns[i].raw;
         if (tkns[i].isTerminated)
             res.push_back(' ');
     }
-
     return res;
 }
 
 std::pair<str, str> get_cmd(const str &s)
 {
-    str t = trim(s);
-
-    int i = 0;
-    while (i < t.size() && t[i] != ' ')
-        i++;
-
-    str cmd = t.substr(0, i);
-    str rest;
-    if (i < t.size())
-        rest = trim(t.substr(i));
-
+    auto tkns = tokenize(s);
+    if (tkns.empty())
+        return {"", ""};
+    str cmd = tkns[0].raw;
+    str rest = stringify(tkns, 1);
     return {cmd, rest};
 }
 

@@ -10,7 +10,6 @@
 typedef std::string str;
 
 str trim(const str &s);
-// std::vector<str> split(const str &s);
 str echofi(const str &s);
 std::pair<str, str> get_cmd(const str &s);
 
@@ -61,7 +60,7 @@ struct Token
         type = mine;
         isTerminated = false;
     }
-    Token(str raw, TokenType mine,bool istmntd)
+    Token(str raw, TokenType mine, bool istmntd)
     {
         this->raw = raw;
         type = mine;
@@ -70,3 +69,5 @@ struct Token
 };
 
 std::vector<Token> tokenize(const str &s);
+
+str stringify(const std::vector<Token> &tkns, int x);
