@@ -71,3 +71,4 @@ struct Token
 std::vector<Token> tokenize(const str &s);
 
 str stringify(const std::vector<Token> &tkns, int x);
+inline str stringify(const std::vector<Token> &tkns) { return stringify(tkns, 0); }

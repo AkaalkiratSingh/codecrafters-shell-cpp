@@ -122,9 +122,7 @@ std::vector<Token> tokenize(const str &s)
     return res;
 }
 
-str echofi(const str &s) { return stringify(tokenize(s)); }
-
-str stringify(const std::vector<Token> &tkns, int x = 0)
+str stringify(const std::vector<Token> &tkns, int x)
 {
     str res;
 
@@ -136,6 +134,8 @@ str stringify(const std::vector<Token> &tkns, int x = 0)
     }
     return res;
 }
+
+str echofi(const str &s) { return stringify(tokenize(s)); }
 
 std::pair<str, str> get_cmd(const str &s)
 {
