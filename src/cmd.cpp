@@ -14,8 +14,8 @@
 
 #include <string>
 
-#include <functional>
 #include <map>
+#include <functional>
 
 void execute_external(const str &exec_path, const str &cmd, const str &rest);
 
