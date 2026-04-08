@@ -85,6 +85,11 @@ std::vector<Token> tokenize(const str &s)
                 insert(DOUBLE_QUOTES);
                 currentState = WHITE;
             }
+            else if (t[i] == '\\')
+            {
+                if (t[i + 1] == '\\' || t[i + 1] == '\"')
+                    cur.push_back(t[++i]);
+            }
             else
                 cur.push_back(t[i]);
             break;
