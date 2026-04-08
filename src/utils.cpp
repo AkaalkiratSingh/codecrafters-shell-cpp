@@ -34,6 +34,15 @@ std::vector<Token> tokenize(const str &s)
 
     state currentState = WHITE;
 
+    auto insert = [&](TokenType tp = DEFAULT, bool isTerminated = false)
+    {
+        if (!res.empty() && !res.back().isTerminated)
+            res.back().raw += cur;
+        else
+            res.emplace_back(cur, tp, isTerminated);
+        cur.clear();
+    };
+
     while (i < t.size())
     {
         switch (currentState)
@@ -41,24 +50,17 @@ std::vector<Token> tokenize(const str &s)
         case DEF:
             if (std::isspace(t[i]))
             {
-                Token temp(cur, DEFAULT);
-                temp.isTerminated = true;
-                res.push_back(temp);
-                cur.clear();
+                insert(DEFAULT, true);
                 currentState = WHITE;
             }
             else if (t[i] == '\'')
             {
-                Token temp(cur, DEFAULT);
-                res.push_back(temp);
-                cur.clear();
+                insert();
                 currentState = SIN_Q;
             }
             else if (t[i] == '\"')
             {
-                Token temp(cur, DEFAULT);
-                res.push_back(temp);
-                cur.clear();
+                insert();
                 currentState = DBL_Q;
             }
             else if (t[i] == '\\')
@@ -70,9 +72,7 @@ std::vector<Token> tokenize(const str &s)
         case SIN_Q:
             if (t[i] == '\'')
             {
-                Token temp(cur, DEFAULT);
-                res.push_back(temp);
-                cur.clear();
+                insert(SINGLE_QUOTES);
                 currentState = WHITE;
             }
             else
@@ -82,9 +82,7 @@ std::vector<Token> tokenize(const str &s)
         case DBL_Q:
             if (t[i] == '\"')
             {
-                Token temp(cur, DEFAULT);
-                res.push_back(temp);
-                cur.clear();
+                insert(DOUBLE_QUOTES);
                 currentState = WHITE;
             }
             else
@@ -112,9 +110,8 @@ std::vector<Token> tokenize(const str &s)
 
     if (currentState == SIN_Q || currentState == DBL_Q)
     {
-        cur.pop_back();
-        Token temp(cur, DEFAULT);
-        res.push_back(temp);
+        TokenType tp = (currentState == SIN_Q) ? SINGLE_QUOTES : DOUBLE_QUOTES;
+        insert(tp, true);
         cur.clear();
     }
     return res;
@@ -199,5 +196,6 @@ str get_executable_path(const str &cmd)
         if (isExecutable(full_path))
             return full_path.string();
 #endif
-    }return "";
+    }
+    return "";
 }

@@ -61,6 +61,12 @@ struct Token
         type = mine;
         isTerminated = false;
     }
+    Token(str raw, TokenType mine,bool istmntd)
+    {
+        this->raw = raw;
+        type = mine;
+        isTerminated = istmntd;
+    }
 };
 
 std::vector<Token> tokenize(const str &s);
