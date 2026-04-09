@@ -139,11 +139,66 @@ str echofi(const str &s) { return stringify(tokenize(s)); }
 
 std::pair<str, str> get_cmd(const str &s)
 {
-    auto tkns = tokenize(s);
-    if (tkns.empty())
+    str t = trim(s) + " ";
+    int i = 0;
+    enum state
+    {
+        DEF,
+        SIN_Q,
+        DBL_Q,
+        WHITE
+    };
+
+    if (t.empty())
         return {"", ""};
-    str cmd = tkns[0].raw;
-    str rest = stringify(tkns, 1);
+
+    state currentState;
+    if (t[0] == '\'')
+        currentState = SIN_Q;
+    else if (t[0] == '\"')
+        currentState = DBL_Q;
+    else
+        currentState = DEF;
+
+    str x;
+
+    bool flag = false;
+    while (i < t.size())
+    {
+        switch (currentState)
+        {
+        case DEF:
+            if (std::isspace(t[i]) || t[i] == '\'' || t[i] == '\"')
+                flag = true;
+            else if (t[i] == '\\')
+                x.push_back(t[++i]);
+            else
+                x.push_back(t[i]);
+            break;
+
+        case SIN_Q:
+            if (t[i] == '\'')
+                flag = true;
+            else
+                x.push_back(t[i]);
+            break;
+
+        case DBL_Q:
+            if (t[i] == '\"')
+                flag = true;
+            else if (t[i] == '\\' && (t[i + 1] == '\\' || t[i + 1] == '\"'))
+                x.push_back(t[++i]);
+            else
+                x.push_back(t[i]);
+        }
+
+        if (flag)
+            break;
+        i++;
+    }
+
+    str cmd = x;
+    str rest = t.substr(i);
     return {cmd, rest};
 }
 

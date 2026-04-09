@@ -28,9 +28,7 @@ bool command_runner::repl()
 
     str s;
     if (!std::getline(std::cin, s))
-    {
         return false;
-    }
 
     if (s.empty())
         return isActive;
