@@ -17,7 +17,7 @@
 #include <map>
 #include <functional>
 
-void execute_external(const str &exec_path, const str &cmd, const str &rest);
+void execute_external(const str &exec_path, const str &cmd, const str &rest, const str &raw);
 
 bool command_runner::isActive = true;
 std::map<str, std::function<void(str &)>> command_runner::cmd_map;
@@ -47,7 +47,7 @@ bool command_runner::repl()
     {
         str exec_path = get_executable_path(cmd);
         if (!exec_path.empty())
-            execute_external(exec_path, cmd, rest);
+            execute_external(exec_path, cmd, rest, s);
         else
             std::cout << cmd << ": command not found\n";
     }
@@ -122,7 +122,7 @@ void command_runner::setup()
 }
 
 // Update the signature to accept the resolved exec_path
-void execute_external(const str &exec_path, const str &cmd, const str &rest)
+void execute_external(const str &exec_path, const str &cmd, const str &rest, const str &raw)
 {
 
 #ifdef _WIN32
@@ -153,9 +153,7 @@ void execute_external(const str &exec_path, const str &cmd, const str &rest)
 
 #else
     // Linux/macOS Implementation
-    str full_cmd = cmd;
-    if (!rest.empty())
-        full_cmd += " " + rest;
+    str full_cmd = raw;
 
     auto tkns = tokenize(full_cmd);
     std::vector<str> string_args;
