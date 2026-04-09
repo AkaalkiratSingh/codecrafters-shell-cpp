@@ -139,7 +139,7 @@ str echofi(const str &s) { return stringify(tokenize(s)); }
 
 std::pair<str, str> get_cmd(const str &s)
 {
-    str t = trim(s) + " ";
+    str t = trim(s);
     int i = 0;
     enum state
     {
