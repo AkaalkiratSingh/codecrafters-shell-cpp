@@ -160,6 +160,8 @@ std::pair<str, str> get_cmd(const str &s)
     else
         currentState = DEF;
 
+    if (currentState != DEF)
+        i++;
     str x;
 
     bool flag = false;
@@ -178,14 +180,20 @@ std::pair<str, str> get_cmd(const str &s)
 
         case SIN_Q:
             if (t[i] == '\'')
+            {
+                i++;
                 flag = true;
+            }
             else
                 x.push_back(t[i]);
             break;
 
         case DBL_Q:
             if (t[i] == '\"')
+            {
+                i++;
                 flag = true;
+            }
             else if (t[i] == '\\' && (t[i + 1] == '\\' || t[i + 1] == '\"'))
                 x.push_back(t[++i]);
             else
