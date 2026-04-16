@@ -16,11 +16,10 @@
 
 #include <map>
 #include <functional>
-
 void execute_external(const str &exec_path, const str &cmd, const str &rest, const str &raw);
 
 bool command_runner::isActive = true;
-std::map<str, std::function<void(str &)>> command_runner::cmd_map;
+std::map<str, std::function<void(std::vector<str> &)>> command_runner::cmd_map;
 
 bool command_runner::repl()
 {
@@ -35,6 +34,8 @@ bool command_runner::repl()
 
     auto [cmd, rest] = get_cmd(s);
 
+    // std::cout << "----" << cmd << "---- : " << "----" << stringify(rest) << "----\n";
+
     if (cmd.empty())
         return isActive;
 
@@ -47,30 +48,26 @@ bool command_runner::repl()
     {
         str exec_path = get_executable_path(cmd);
         if (!exec_path.empty())
-            execute_external(exec_path, cmd, rest, s);
+            execute_external(exec_path, cmd, stringify(rest), s);
         else
             std::cout << cmd << ": command not found\n";
     }
     return isActive;
 }
 
-void command_runner::exit(str &input)
+void command_runner::exit(std::vector<str> &args)
 {
-    if (input != "")
-        std::cout << input << ": command not found\n";
+    if (!args.empty())
+        std::cout << stringify(args) << ": command not found\n";
 
     command_runner::isActive = false;
 }
-void command_runner::echo(str &input) { std::cout << echofi(input) << '\n'; }
+void command_runner::echo(std::vector<str> &args) { std::cout << stringify(args) << '\n'; }
 
-void command_runner::type(str &input)
+void command_runner::type(std::vector<str> &args)
 {
-
-    auto tkns = tokenize(input);
-    for (const auto &tkn : tkns)
+    for (const auto &cmd : args)
     {
-        str cmd = tkn.raw;
-
         if (command_runner::cmd_map.contains(cmd))
             std::cout << cmd << " is a shell builtin\n";
         else
@@ -84,18 +81,17 @@ void command_runner::type(str &input)
     }
 }
 
-void command_runner::pwd(str &input) { std::cout << std::filesystem::current_path().string() << '\n'; }
+void command_runner::pwd(std::vector<str> &args) { std::cout << std::filesystem::current_path().string() << '\n'; }
 
-void command_runner::cd(str &input)
+void command_runner::cd(std::vector<str> &args)
 {
-    auto splt = tokenize(input);
-    if (splt.size() > 1)
+    if (args.size() > 1)
     {
         std::cerr << "cd: too many arguments\n";
         return;
     }
 
-    str target = splt[0].raw;
+    str target = args[0];
 
     try
     {
@@ -158,13 +154,12 @@ void execute_external(const str &exec_path, const str &cmd, const str &rest, con
     auto tkns = tokenize(full_cmd);
     std::vector<str> string_args;
     for (const auto &t : tkns)
-        string_args.push_back(t.raw);
+        string_args.push_back(t);
     std::vector<char *> args;
 
     for (auto &s : string_args)
-    {
         args.push_back(const_cast<char *>(s.c_str()));
-    }
+
     args.push_back(nullptr);
 
     pid_t pid = fork();
