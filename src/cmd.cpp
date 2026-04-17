@@ -5,9 +5,7 @@
 
 #include <filesystem>
 
-#ifdef _WIN32
-#include <windows.h>
-#else
+#ifndef _WIN32
 #include <sys/wait.h>
 #include <unistd.h>
 #endif
@@ -34,8 +32,6 @@ bool command_runner::repl()
 
     auto [cmd, rest] = get_cmd(s);
 
-    // std::cout << "----" << cmd << "---- : " << "----" << stringify(rest) << "----\n";
-
     if (cmd.empty())
         return isActive;
 
@@ -50,7 +46,7 @@ bool command_runner::repl()
         if (!exec_path.empty())
             execute_external(exec_path, cmd, stringify(rest), s);
         else
-            std::cout << cmd << ": command not found\n";
+            std::cerr << cmd << ": command not found\n";
     }
     return isActive;
 }
@@ -58,7 +54,7 @@ bool command_runner::repl()
 void command_runner::exit(std::vector<str> &args)
 {
     if (!args.empty())
-        std::cout << stringify(args) << ": command not found\n";
+        std::cerr << stringify(args) << ": command not found\n";
 
     command_runner::isActive = false;
 }
@@ -76,7 +72,7 @@ void command_runner::type(std::vector<str> &args)
             if (!exec_path.empty())
                 std::cout << cmd << " is " << exec_path << '\n';
             else
-                std::cout << cmd << ": not found\n";
+                std::cerr << cmd << ": not found\n";
         }
     }
 }
@@ -121,34 +117,8 @@ void command_runner::setup()
 void execute_external(const str &exec_path, const str &cmd, const str &rest, const str &raw)
 {
 
-#ifdef _WIN32
-    // Windows Implementation
-    str command_line = exec_path; // Use the resolved path!
-    if (!rest.empty())
-        command_line += " " + rest;
-
-    STARTUPINFOA si;
-    PROCESS_INFORMATION pi;
-    ZeroMemory(&si, sizeof(si));
-    si.cb = sizeof(si);
-    ZeroMemory(&pi, sizeof(pi));
-
-    std::vector<char> cmd_buffer(command_line.begin(), command_line.end());
-    cmd_buffer.push_back('\0');
-
-    if (CreateProcessA(NULL, cmd_buffer.data(), NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
-    {
-        WaitForSingleObject(pi.hProcess, INFINITE);
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
-    }
-    else
-    {
-        std::cout << cmd << ": command not found\n";
-    }
-
-#else
-    // Linux/macOS Implementation
+    // Hack to bypass VS Code not identifying the Linux/WSL functions/libraries
+#ifndef _WIN32
     str full_cmd = raw;
 
     auto tkns = tokenize(full_cmd);
@@ -169,7 +139,7 @@ void execute_external(const str &exec_path, const str &cmd, const str &rest, con
         // Use execv (no 'p') and pass the exact path we found
         execv(exec_path.c_str(), args.data());
 
-        std::cout << cmd << ": command not found\n";
+        std::cerr << cmd << ": command not found\n";
         std::exit(1);
     }
     else if (pid > 0)
@@ -178,8 +148,6 @@ void execute_external(const str &exec_path, const str &cmd, const str &rest, con
         waitpid(pid, &status, 0);
     }
     else
-    {
         std::cerr << "Fork failed\n";
-    }
 #endif
 }
