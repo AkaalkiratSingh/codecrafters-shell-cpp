@@ -17,6 +17,24 @@ str trim(const str &s)
     return s.substr(front, back - front + 1);
 }
 
+std::vector<str> split(const str &s, char c)
+{
+    std::vector<str> res;
+    str cur;
+    for (int i = 0; i <= s.size(); i++)
+    {
+        if (i == s.size() || s[i] == c)
+        {
+            res.push_back(cur);
+            cur.clear();
+        }
+        else
+            cur.push_back(s[i]);
+    }
+
+    return res;
+}
+
 std::vector<str> tokenize(const str &s)
 {
     str t = ' ' + s + ' ';

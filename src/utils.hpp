@@ -15,6 +15,7 @@ str stringify(const std::vector<str> &tkns, int x);
 inline str stringify(const std::vector<str> &tkns) { return stringify(tkns, 0); }
 
 str trim(const str &s);
+std::vector<str> split(const str &s, char c);
 str echofi(const str &s);
 std::pair<str, std::vector<str>> get_cmd(const str &s);
 

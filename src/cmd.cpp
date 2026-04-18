@@ -4,6 +4,8 @@
 #include <cstdlib>
 
 #include <filesystem>
+#include <fstream>
+#include <streambuf>
 
 #ifndef _WIN32
 #include <sys/wait.h>
@@ -23,30 +25,169 @@ bool command_runner::repl()
 {
     std::cout << "$ ";
 
-    str s;
-    if (!std::getline(std::cin, s))
+    str l;
+    if (!std::getline(std::cin, l))
         return false;
 
-    if (s.empty())
+    if (l.empty())
         return isActive;
 
-    auto [cmd, rest] = get_cmd(s);
-
-    if (cmd.empty())
-        return isActive;
-
-    if (cmd_map.contains(cmd))
+    for (auto &s : split(l, ';'))
     {
-        auto func = cmd_map[cmd];
-        func(rest);
-    }
-    else
-    {
-        str exec_path = get_executable_path(cmd);
-        if (!exec_path.empty())
-            execute_external(exec_path, cmd, stringify(rest), s);
+
+        std::streambuf *def_cout_buff = std::cout.rdbuf();
+        std::streambuf *def_cerr_buff = std::cerr.rdbuf();
+
+        s = ' ' + s + ' ';
+        int i = 1;
+
+        // Partition the given line into 3 strings
+        // s1 -> the command
+        // s2 -> the stdout redirection target (if any)
+        // s3 -> the stderr redirection target (if any)
+        str s1, s2, s3;
+        bool append_out = false, append_err = false;
+        enum state
+        {
+            DEF,
+            _OUT,
+            _ERR
+        };
+        state curState = DEF;
+        while (i < s.size())
+        {
+            switch (curState)
+            {
+            case DEF:
+                if (s[i] == '>')
+                {
+                    if (s[i - 1] == '2')
+                    {
+                        s1.pop_back();
+
+                        // the next portion is the stderr redirection target
+                        curState = _ERR;
+                        if (s[i + 1] == '>')
+                        {
+                            append_err = true;
+                            i++;
+                        }
+                    }
+                    else
+                    {
+                        if (s[i - 1] == '1')
+                            s1.pop_back();
+
+                        // the next portion is the stdout redirection target
+                        curState = _OUT;
+                        if (s[i + 1] == '>')
+                        {
+                            append_out = true;
+                            i++;
+                        }
+                    }
+                }
+                else
+                    s1.push_back(s[i]);
+                break;
+
+            case _OUT:
+                if (s[i] == '>')
+                {
+                    if (!s3.empty())
+                    {
+                        std::cerr << "Syntax error: multiple redirections\n";
+                        return isActive;
+                    }
+
+                    if (s[i - 1] == '2')
+                        s2.pop_back();
+
+                    // the next portion is the stderr redirection target
+                    curState = _ERR;
+                    if (s[i + 1] == '>')
+                    {
+                        append_err = true;
+                        i++;
+                    }
+                }
+                else
+                    s2.push_back(s[i]);
+                break;
+
+            case _ERR:
+                if (s[i] == '>')
+                {
+                    if (!s2.empty())
+                    {
+                        std::cerr << "Syntax error: multiple redirections\n";
+                        return isActive;
+                    }
+
+                    if (s[i - 1] == '1')
+                        s3.pop_back();
+
+                    // the next portion is the stdout redirection target
+                    curState = _OUT;
+                    if (s[i + 1] == '>')
+                    {
+                        append_out = true;
+                        i++;
+                    }
+                }
+                else
+                    s3.push_back(s[i]);
+                break;
+            }
+            i++;
+        }
+
+        // std::cout << "s1: " << s1 << '\n';
+        // std::cout << "s2: " << s2 << '\n';
+        // std::cout << "s3: " << s3 << '\n';
+        s2 = trim(s2);
+        s3 = trim(s3);
+
+        std::ofstream out;
+        std::ofstream err;
+
+        if (!s2.empty())
+        {
+            out.open(s2, append_out ? std::ios::app : std::ios::trunc);
+            std::cout.rdbuf(out.rdbuf());
+        }
+        if (!s3.empty())
+        {
+            err.open(s3, append_err ? std::ios::app : std::ios::trunc);
+            std::cerr.rdbuf(err.rdbuf());
+        }
+
+        auto [cmd, rest] = get_cmd(s1);
+
+        if (cmd.empty())
+        {
+            std::cout.rdbuf(def_cout_buff);
+            std::cerr.rdbuf(def_cerr_buff);
+
+            return isActive;
+        }
+
+        if (cmd_map.contains(cmd))
+        {
+            auto func = cmd_map[cmd];
+            func(rest);
+        }
         else
-            std::cerr << cmd << ": command not found\n";
+        {
+            str exec_path = get_executable_path(cmd);
+            if (!exec_path.empty())
+                execute_external(exec_path, cmd, stringify(rest), s1);
+            else
+                std::cerr << cmd << ": command not found\n";
+        }
+
+        std::cout.rdbuf(def_cout_buff);
+        std::cerr.rdbuf(def_cerr_buff);
     }
     return isActive;
 }
