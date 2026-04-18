@@ -10,13 +10,15 @@
 #ifndef _WIN32
 #include <sys/wait.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #endif
 
 #include <string>
 
 #include <map>
 #include <functional>
-void execute_external(const str &exec_path, const str &cmd, const str &rest, const str &raw);
+void execute_external(const str &exec_path, const str &cmd, const str &rest, const str &raw, const str &s2, const str &s3, bool append_out, bool append_err);
 
 bool command_runner::isActive = true;
 std::map<str, std::function<void(std::vector<str> &)>> command_runner::cmd_map;
@@ -34,7 +36,8 @@ bool command_runner::repl()
 
     for (auto &s : split(l, ';'))
     {
-
+        if (s.empty())
+            continue;
         std::streambuf *def_cout_buff = std::cout.rdbuf();
         std::streambuf *def_cerr_buff = std::cerr.rdbuf();
 
@@ -142,9 +145,9 @@ bool command_runner::repl()
             i++;
         }
 
-        std::cout << "s1: " << s1 << '\n';
-        std::cout << "s2: " << s2 << '\n';
-        std::cout << "s3: " << s3 << '\n';
+        // std::cout << "s1: " << s1 << '\n';
+        // std::cout << "s2: " << s2 << '\n';
+        // std::cout << "s3: " << s3 << '\n';
         s2 = trim(s2);
         s3 = trim(s3);
 
@@ -154,21 +157,11 @@ bool command_runner::repl()
         if (!s2.empty())
         {
             out.open(s2, append_out ? std::ios::app : std::ios::trunc);
-            if(!out)
-            {
-                std::cerr << "Failed to open file\n";
-                return isActive;
-            }
             std::cout.rdbuf(out.rdbuf());
         }
         if (!s3.empty())
         {
             err.open(s3, append_err ? std::ios::app : std::ios::trunc);
-            if(!err)
-            {
-                std::cerr << "Failed to open file\n";
-                return isActive;
-            }
             std::cerr.rdbuf(err.rdbuf());
         }
 
@@ -191,7 +184,7 @@ bool command_runner::repl()
         {
             str exec_path = get_executable_path(cmd);
             if (!exec_path.empty())
-                execute_external(exec_path, cmd, stringify(rest), s1);
+                execute_external(exec_path, cmd, stringify(rest), s1, s2, s3, append_out, append_err);
             else
                 std::cerr << cmd << ": command not found\n";
         }
@@ -265,17 +258,14 @@ void command_runner::setup()
 }
 
 // Update the signature to accept the resolved exec_path
-void execute_external(const str &exec_path, const str &cmd, const str &rest, const str &raw)
+void execute_external(const str &exec_path, const str &cmd, const str &rest, const str &raw, const str &s2, const str &s3, bool append_out, bool append_err)
 {
 
-    // Hack to bypass VS Code not identifying the Linux/WSL functions/libraries
+// Hack to bypass VS Code not identifying the Linux/WSL functions/libraries
 #ifndef _WIN32
-    str full_cmd = raw;
 
-    auto tkns = tokenize(full_cmd);
-    std::vector<str> string_args;
-    for (const auto &t : tkns)
-        string_args.push_back(t);
+    auto tkns = tokenize(raw);
+    std::vector<str> string_args(tkns.begin(), tkns.end());
     std::vector<char *> args;
 
     for (auto &s : string_args)
@@ -288,9 +278,36 @@ void execute_external(const str &exec_path, const str &cmd, const str &rest, con
     if (pid == 0)
     {
         // Use execv (no 'p') and pass the exact path we found
+        if (!s2.empty())
+        {
+            int fd = open(s2.c_str(),
+                          O_WRONLY | O_CREAT | (append_out ? O_APPEND : O_TRUNC),
+                          0644);
+            if (fd < 0)
+            {
+                std::perror("open");
+                std::exit(1);
+            }
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+        }
+        if (!s3.empty())
+        {
+            int fd = open(s3.c_str(),
+                          O_WRONLY | O_CREAT | (append_err ? O_APPEND : O_TRUNC),
+                          0644);
+            if (fd < 0)
+            {
+                std::perror("open");
+                std::exit(1);
+            }
+            dup2(fd, STDERR_FILENO);
+            close(fd);
+        }
+
         execv(exec_path.c_str(), args.data());
 
-        std::cerr << cmd << ": command not found\n";
+        std::perror("execv");
         std::exit(1);
     }
     else if (pid > 0)
