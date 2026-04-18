@@ -142,9 +142,9 @@ bool command_runner::repl()
             i++;
         }
 
-        // std::cout << "s1: " << s1 << '\n';
-        // std::cout << "s2: " << s2 << '\n';
-        // std::cout << "s3: " << s3 << '\n';
+        std::cout << "s1: " << s1 << '\n';
+        std::cout << "s2: " << s2 << '\n';
+        std::cout << "s3: " << s3 << '\n';
         s2 = trim(s2);
         s3 = trim(s3);
 
