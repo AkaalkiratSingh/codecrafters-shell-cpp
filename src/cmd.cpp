@@ -154,11 +154,21 @@ bool command_runner::repl()
         if (!s2.empty())
         {
             out.open(s2, append_out ? std::ios::app : std::ios::trunc);
+            if(!out)
+            {
+                std::cerr << "Failed to open file\n";
+                return isActive;
+            }
             std::cout.rdbuf(out.rdbuf());
         }
         if (!s3.empty())
         {
             err.open(s3, append_err ? std::ios::app : std::ios::trunc);
+            if(!err)
+            {
+                std::cerr << "Failed to open file\n";
+                return isActive;
+            }
             std::cerr.rdbuf(err.rdbuf());
         }
 
