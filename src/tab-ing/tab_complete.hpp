@@ -18,8 +18,24 @@
 // with      readline_with_completion(line)
 // That's the only change needed in cmd.cpp.
 
+/*
+project_structure
+.
+|
+|
+|--.src
+|   |
+|   |--.tabing
+|   |   |--tab_complete.hpp
+|   |   |--tab_complete.cpp
+|   |   
+|   |--utils.hpp
+|   |--utils.cpp
+|   |--main.cpp
+*/
+
 #pragma once
-#include "utils.hpp"
+#include "../utils.hpp"
 #include <optional>
 
 /// Read one line from stdin with Tab completion support.
