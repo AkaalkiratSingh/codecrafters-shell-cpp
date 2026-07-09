@@ -14,13 +14,6 @@ void Command::insert(str tkn) {
 }
 
 str trim(const str& s) {
-    /*
-    int i = 0, j = s.size() - 1;
-    while (std::isspace(s[i])) i++;
-    while (std::isspace(s[j])) j--;
-    return s.substr(i, j - i + 1);
-    */
-
     // crazy logic that trims s
     auto front = std::find_if_not(s.begin(), s.end(), ::isspace);
     auto back = std::find_if_not(s.rbegin(), s.rend(), ::isspace).base();
@@ -170,6 +163,7 @@ struct RawPiece {
     bool append = false;
     Redirect::Fd fd = Redirect::Fd::Stdout;
 };
+
 /// Break a sentence into operators and text-segments
 /// {a 1>> b 2> c} converts to {[a], ["",redirect,append,Stdout], [b], ["",redirect,Stderr], [c]}
 std::vector<RawPiece> split_redirects(const str& seg) {
