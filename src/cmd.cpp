@@ -1,4 +1,5 @@
 #include "utils.hpp"
+#include "tab-ing/tab_complete.hpp"
 
 #include <cstdlib>
 #include <filesystem>
@@ -47,8 +48,9 @@ namespace command_runner {
         std::cout << "$ ";
 
         str line;
-        if (!std::getline(std::cin, line)) return false;
-        if (trim(line).empty())            return isActive;
+        // if (!std::getline(std::cin, line)) return false;
+        if (!readline_with_completion(line))    return false;
+        if (trim(line).empty())                 return isActive;
 
         auto cmds = parse_line(line);
 
@@ -159,7 +161,6 @@ static void execute_external(const str& exec_path, const Command& cmd) {
         std::exit(1);
     }
 
-    // Parent: wait for child
     int status;
     waitpid(pid, &status, 0);
 }
