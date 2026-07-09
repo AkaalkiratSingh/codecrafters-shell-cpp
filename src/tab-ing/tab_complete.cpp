@@ -1,4 +1,5 @@
 #include "tab_complete.hpp"
+#include "../utils.hpp"
 
 #include <termios.h>
 #include <unistd.h>
@@ -50,6 +51,8 @@ bool readline_with_completion(str& out) {
             out = line;
             return !line.empty();
         }
+        
+        if (c != '\t') tab_remains = false;
 
         if (c == '\n' || c == '\r') {
             std::cout << '\n';
@@ -90,30 +93,34 @@ bool readline_with_completion(str& out) {
 
                 tab_remains = false;
             }
-            else if (matches.size() == 1) {
-                // Unique match → complete it (append the rest + a space)
-                str suffix = matches[0].substr(prefix.size()) + ' ';
-                line.insert(cursor, suffix);
-                cursor += suffix.size();
-                redraw(line, cursor);
-
-                tab_remains = false;
-            }
-            else if (!tab_remains) {
-                std::cout << '\x07';
-                std::cout.flush();
-
-                tab_remains = true;
-            }
             else {
-                // Multiple matches → show list, redraw prompt
-                std::cout << '\n';
-                for (const auto& m : matches)
-                    std::cout << m << "  ";
-                std::cout << '\n';
-                redraw(line, cursor);
+                str lcp = longest_common_prefix(matches);
 
-                tab_remains = false;
+                if (lcp.size() > prefix.size()) {
+                    // Extend as far as the shared prefix allows
+                    str suffix = lcp.substr(prefix.size());
+                    if (matches.size() == 1) suffix += ' ';   // unique match → finish with a space
+                    line.insert(cursor, suffix);
+                    cursor += suffix.size();
+                    redraw(line, cursor);
+                    tab_remains = false;
+                }
+                else if (!tab_remains) {
+                    // No further extension possible, multiple matches, first Tab → bell
+                    std::cout << '\a'; std::cout.flush();
+                    tab_remains = true;
+                }
+                else {
+                    // Second consecutive Tab → list all matches
+                    std::cout << '\n';
+                    for (std::size_t i = 0; i < matches.size(); ++i) {
+                        std::cout << matches[i];
+                        if (i + 1 < matches.size()) std::cout << "  ";
+                    }
+                    std::cout << '\n';
+                    redraw(line, cursor);
+                    tab_remains = false;
+                }
             }
             continue;
         }

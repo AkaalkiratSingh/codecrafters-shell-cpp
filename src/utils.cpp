@@ -313,7 +313,7 @@ std::optional<str> find_in_path(const str& cmd) {
 std::vector<str> completions_for(const str& prefix) {
     std::vector<str> matches;
     std::error_code ec;
-    
+
     for (const auto& dir : path_dirs()) {
         for (const auto& entry : std::filesystem::directory_iterator(dir, ec)) {
             const str name = entry.path().filename().string();
@@ -325,4 +325,20 @@ std::vector<str> completions_for(const str& prefix) {
     std::sort(matches.begin(), matches.end());
     matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
     return matches;
+}
+
+// Take in an array of sorted strings and give the longest_common_prefix
+str longest_common_prefix(const std::vector<str>& arr) {
+    if (arr.empty())
+        return "";
+    if (arr.size() == 1)
+        return arr.front();
+
+    const str& a = arr.front();
+    const str& b = arr.back();
+
+    int i = 0;
+    while (i < a.size() && i < b.size() && a[i] == b[i])    i++;
+
+    return a.substr(0, i);
 }

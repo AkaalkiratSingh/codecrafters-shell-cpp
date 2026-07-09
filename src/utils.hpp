@@ -49,6 +49,7 @@ std::optional<str> find_in_path(const str& cmd);
 
 // Return every executable name that starts with `prefix` (for tab completion).
 std::vector<str> completions_for(const str& prefix);
+str longest_common_prefix(const std::vector<str>& arr);
 
 namespace command_runner {
     extern bool isActive;
