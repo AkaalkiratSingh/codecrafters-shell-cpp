@@ -1,6 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// tab_complete.cpp
-// ─────────────────────────────────────────────────────────────────────────────
 #include "tab_complete.hpp"
 
 #include <termios.h>
@@ -39,12 +36,13 @@ namespace {
         std::cout.flush();
     }
 
-} // namespace
+}
 
 bool readline_with_completion(str& out) {
     RawMode raw;
     str line;
-    std::size_t cursor = 0;
+    int cursor = 0;
+    bool tab_remains = false;
 
     while (true) {
         char c;
@@ -87,8 +85,10 @@ bool readline_with_completion(str& out) {
             matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
 
             if (matches.empty()) {
-                // Bell: nothing to complete
-                std::cout << '\a'; std::cout.flush();
+                std::cout << '\a';
+                std::cout.flush();
+
+                tab_remains = false;
             }
             else if (matches.size() == 1) {
                 // Unique match → complete it (append the rest + a space)
@@ -96,13 +96,24 @@ bool readline_with_completion(str& out) {
                 line.insert(cursor, suffix);
                 cursor += suffix.size();
                 redraw(line, cursor);
+
+                tab_remains = false;
+            }
+            else if (!tab_remains) {
+                std::cout << '\x07';
+                std::cout.flush();
+
+                tab_remains = true;
             }
             else {
                 // Multiple matches → show list, redraw prompt
                 std::cout << '\n';
-                for (const auto& m : matches) std::cout << m << "  ";
+                for (const auto& m : matches)
+                    std::cout << m << "  ";
                 std::cout << '\n';
                 redraw(line, cursor);
+
+                tab_remains = false;
             }
             continue;
         }
