@@ -351,10 +351,10 @@ std::vector<CompletionItem> file_completions(const str& prefix) {
 
         if (name.rfind(file_part, 0) == 0) {
             str display_name = name;
-            str full_name = dir_part + display_name;
-
             if (entry.is_directory())
                 display_name += '/';
+            
+            str full_name = dir_part + display_name;
 
             matches.push_back({
                 full_name,
