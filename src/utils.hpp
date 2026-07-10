@@ -11,11 +11,9 @@
 
 using str = std::string;
 
-
 str  trim(const str& s);
 str  stringify(const std::vector<str>& tokens, std::size_t from = 0);
 std::vector<str> split(const str& s, char delim);
-
 
 struct Token {
     str  value;
