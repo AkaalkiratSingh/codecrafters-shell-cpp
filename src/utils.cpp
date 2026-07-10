@@ -46,7 +46,7 @@ str stringify(const std::vector<str>& tokens, std::size_t from) {
     return result;
 }
 
-std::vector<Token> tokenize(const str& input) {
+std::vector<Token> tokenize(const str& input, bool force_terminate_at_end) {
     enum class State {
         Whitespace,
         Default,
@@ -145,7 +145,7 @@ std::vector<Token> tokenize(const str& input) {
 
     // Flush any remaining content (handles unclosed quotes gracefully)
     if (!cur.empty() || state == State::SingleQ || state == State::DoubleQ)
-        flush(true);
+        flush(force_terminate_at_end);
 
     return result;
 }
@@ -319,6 +319,31 @@ std::vector<str> completions_for(const str& prefix) {
             const str name = entry.path().filename().string();
             if (name.rfind(prefix, 0) == 0 && isExecutable(entry.path()))
                 matches.push_back(name);
+        }
+    }
+
+    std::sort(matches.begin(), matches.end());
+    matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
+    return matches;
+}
+
+std::vector<str> file_completions(const str& prefix) {
+    using namespace std::filesystem;
+
+    std::vector<str> matches;
+    std::error_code ec;
+
+    for (const auto& entry : directory_iterator(current_path(), ec)) {
+        str name = entry.path().filename();
+
+        if (name.starts_with('.') && !prefix.starts_with('.'))
+            continue;
+
+        if (name.rfind(prefix, 0) == 0) {
+            if (entry.is_directory())
+                name += '/';
+
+            matches.push_back(name);
         }
     }
 

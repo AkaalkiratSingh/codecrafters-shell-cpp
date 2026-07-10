@@ -39,6 +39,33 @@ namespace {
 
 }
 
+struct WordContext {
+    str  word;                 // prefix of the word currently being completed
+    bool is_command_position;  // true => complete against PATH + builtins
+};
+
+WordContext get_word_context(const str& line, std::size_t cursor) {
+    str upto = line.substr(0, cursor);
+    auto tokens = tokenize(upto, false);
+
+    if (tokens.empty())
+        return {
+            "",                     // word
+            true                    // is_command_position
+    };
+
+    if (tokens.back().terminated)
+        return {
+            "",                     // word
+            false                   // is_command_position
+    };
+
+    // In between a word
+    str word = tokens.back().value;
+    bool is_first = (tokens.size() == 1);
+    return { word, is_first };
+}
+
 bool readline_with_completion(str& out) {
     RawMode raw;
     str line;
@@ -51,7 +78,7 @@ bool readline_with_completion(str& out) {
             out = line;
             return !line.empty();
         }
-        
+
         if (c != '\t') tab_remains = false;
 
         if (c == '\n' || c == '\r') {
@@ -60,7 +87,7 @@ bool readline_with_completion(str& out) {
             return true;
         }
 
-        if (c == 4) {
+        if (c == 4) {                         // Ctrl + D
             if (line.empty()) {
                 std::cout << '\n';
                 return false;
@@ -76,14 +103,29 @@ bool readline_with_completion(str& out) {
             continue;
         }
 
-        if (c == '\t') {                       // ← Tab: the interesting part
-            str prefix = last_word(line);
-            auto matches = completions_for(prefix);
+        if (c == '\t') {                       // Tab
+            WordContext wc = get_word_context(line, cursor);
 
-            // Also offer built-in command names
-            for (const auto& [name, _] : command_runner::cmd_map)
-                if (name.rfind(prefix, 0) == 0)
-                    matches.push_back(name);
+            std::vector<str> matches;
+            if (wc.is_command_position) {
+                // Executables from path
+                if (wc.word.empty())
+                    continue;
+
+
+                matches = completions_for(wc.word);
+
+                // builtins
+                for (const auto& [name, _] : command_runner::cmd_map)
+                    if (name.rfind(wc.word, 0) == 0)
+                        matches.push_back(name);
+            }
+            else {
+                ///// TODO: filesystem-based completion, wired in next
+                matches = file_completions(wc.word);
+            }
+
+            // clear duplicates and order the possible matches
             std::sort(matches.begin(), matches.end());
             matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
 
@@ -96,18 +138,21 @@ bool readline_with_completion(str& out) {
             else {
                 str lcp = longest_common_prefix(matches);
 
-                if (lcp.size() > prefix.size()) {
+                if (lcp.size() > wc.word.size()) {
                     // Extend as far as the shared prefix allows
-                    str suffix = lcp.substr(prefix.size());
+                    str suffix = lcp.substr(wc.word.size());
                     if (matches.size() == 1) suffix += ' ';   // unique match → finish with a space
                     line.insert(cursor, suffix);
                     cursor += suffix.size();
                     redraw(line, cursor);
+
                     tab_remains = false;
                 }
                 else if (!tab_remains) {
                     // No further extension possible, multiple matches, first Tab → bell
-                    std::cout << '\a'; std::cout.flush();
+                    std::cout << '\a';
+                    std::cout.flush();
+
                     tab_remains = true;
                 }
                 else {
@@ -119,6 +164,7 @@ bool readline_with_completion(str& out) {
                     }
                     std::cout << '\n';
                     redraw(line, cursor);
+
                     tab_remains = false;
                 }
             }

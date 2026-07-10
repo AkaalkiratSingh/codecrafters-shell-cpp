@@ -21,7 +21,7 @@ struct Token {
     str  value;
     bool terminated = true;
 };
-std::vector<Token> tokenize(const str& s);
+std::vector<Token> tokenize(const str& s, bool force_terminate_at_end = true);
 std::vector<str> token_values(const std::vector<Token>& tokens);
 
 // Container that manages Redirection
@@ -49,6 +49,7 @@ std::optional<str> find_in_path(const str& cmd);
 
 // Return every executable name that starts with `prefix` (for tab completion).
 std::vector<str> completions_for(const str& prefix);
+std::vector<str> file_completions(const str& prefix);
 str longest_common_prefix(const std::vector<str>& arr);
 
 namespace command_runner {
