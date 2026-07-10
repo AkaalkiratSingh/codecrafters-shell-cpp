@@ -310,15 +310,18 @@ std::optional<str> find_in_path(const str& cmd) {
     return std::nullopt;
 }
 
-std::vector<str> completions_for(const str& prefix) {
-    std::vector<str> matches;
+bool CompletionItem::operator<(const CompletionItem& other) const { return full < other.full; }
+bool CompletionItem::operator==(const CompletionItem& other) const { return full == other.full; }
+
+std::vector<CompletionItem> completions_for(const str& prefix) {
+    std::vector<CompletionItem> matches;
     std::error_code ec;
 
     for (const auto& dir : path_dirs()) {
         for (const auto& entry : std::filesystem::directory_iterator(dir, ec)) {
             const str name = entry.path().filename().string();
             if (name.rfind(prefix, 0) == 0 && isExecutable(entry.path()))
-                matches.push_back(name);
+                matches.push_back({ name,name,false });
         }
     }
 
@@ -327,23 +330,37 @@ std::vector<str> completions_for(const str& prefix) {
     return matches;
 }
 
-std::vector<str> file_completions(const str& prefix) {
+std::vector<CompletionItem> file_completions(const str& prefix) {
     using namespace std::filesystem;
 
-    std::vector<str> matches;
+    std::vector<CompletionItem> matches;
     std::error_code ec;
 
-    for (const auto& entry : directory_iterator(current_path(), ec)) {
+    auto slash_pos = prefix.find_last_of('/');
+    str dir_part = (slash_pos == str::npos) ? "" : prefix.substr(0, slash_pos + 1);
+    str file_part = (slash_pos == str::npos) ? prefix : prefix.substr(slash_pos + 1);
+
+    path search_dir = dir_part.empty() ? current_path() : path(dir_part);
+
+
+    for (const auto& entry : directory_iterator(search_dir, ec)) {
         str name = entry.path().filename();
 
-        if (name.starts_with('.') && !prefix.starts_with('.'))
+        if (name.starts_with('.') && !file_part.starts_with('.'))
             continue;
 
-        if (name.rfind(prefix, 0) == 0) {
-            if (entry.is_directory())
-                name += '/';
+        if (name.rfind(file_part, 0) == 0) {
+            str display_name = name;
+            str full_name = dir_part + display_name;
 
-            matches.push_back(name);
+            if (entry.is_directory())
+                display_name += '/';
+
+            matches.push_back({
+                full_name,
+                display_name,
+                entry.is_directory()
+                });
         }
     }
 
@@ -353,14 +370,14 @@ std::vector<str> file_completions(const str& prefix) {
 }
 
 // Take in an array of sorted strings and give the longest_common_prefix
-str longest_common_prefix(const std::vector<str>& arr) {
+str longest_common_prefix(const std::vector<CompletionItem>& arr) {
     if (arr.empty())
         return "";
     if (arr.size() == 1)
-        return arr.front();
+        return arr.front().full;
 
-    const str& a = arr.front();
-    const str& b = arr.back();
+    const str& a = arr.front().full;
+    const str& b = arr.back().full;
 
     int i = 0;
     while (i < a.size() && i < b.size() && a[i] == b[i])    i++;

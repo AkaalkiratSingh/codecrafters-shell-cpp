@@ -2,7 +2,10 @@
 #include "../utils.hpp"
 #include <optional>
 
-// Read one line from stdin with Tab completion support.
-// Returns false on EOF (Ctrl-D on an empty line).
-bool readline_with_completion(str &line);
+struct WordContext {
+    str  word;                 
+    bool is_command_position;  
+};
+
+bool readline_with_completion(str& line);
 

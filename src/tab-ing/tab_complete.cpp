@@ -39,10 +39,7 @@ namespace {
 
 }
 
-struct WordContext {
-    str  word;                 // prefix of the word currently being completed
-    bool is_command_position;  // true => complete against PATH + builtins
-};
+
 
 WordContext get_word_context(const str& line, std::size_t cursor) {
     str upto = line.substr(0, cursor);
@@ -106,7 +103,7 @@ bool readline_with_completion(str& out) {
         if (c == '\t') {                       // Tab
             WordContext wc = get_word_context(line, cursor);
 
-            std::vector<str> matches;
+            std::vector<CompletionItem> matches;
             if (wc.is_command_position) {
                 // Executables from path
                 if (wc.word.empty())
@@ -118,7 +115,7 @@ bool readline_with_completion(str& out) {
                 // builtins
                 for (const auto& [name, _] : command_runner::cmd_map)
                     if (name.rfind(wc.word, 0) == 0)
-                        matches.push_back(name);
+                        matches.push_back({ name,name,false });
             }
             else {
                 ///// TODO: filesystem-based completion, wired in next
@@ -139,32 +136,25 @@ bool readline_with_completion(str& out) {
                 str lcp = longest_common_prefix(matches);
 
                 if (lcp.size() > wc.word.size()) {
-                    // Extend as far as the shared prefix allows
                     str suffix = lcp.substr(wc.word.size());
-                    if (matches.size() == 1) suffix += ' ';   // unique match → finish with a space
+                    if (matches.size() == 1 && !matches[0].is_dir) suffix += ' '; 
                     line.insert(cursor, suffix);
                     cursor += suffix.size();
                     redraw(line, cursor);
-
                     tab_remains = false;
                 }
                 else if (!tab_remains) {
-                    // No further extension possible, multiple matches, first Tab → bell
-                    std::cout << '\a';
-                    std::cout.flush();
-
+                    std::cout << '\a'; std::cout.flush();
                     tab_remains = true;
                 }
                 else {
-                    // Second consecutive Tab → list all matches
                     std::cout << '\n';
                     for (std::size_t i = 0; i < matches.size(); ++i) {
-                        std::cout << matches[i];
+                        std::cout << matches[i].display;                 
                         if (i + 1 < matches.size()) std::cout << "  ";
                     }
                     std::cout << '\n';
                     redraw(line, cursor);
-
                     tab_remains = false;
                 }
             }

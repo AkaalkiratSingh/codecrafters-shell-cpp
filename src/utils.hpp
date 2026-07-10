@@ -47,10 +47,19 @@ std::optional<std::vector<Command>> parse_line(const str& line);
 bool isExecutable(const std::filesystem::path& p);
 std::optional<str> find_in_path(const str& cmd);
 
+struct CompletionItem {
+    str  full;
+    str  display;
+    bool is_dir;
+
+    bool operator<(const CompletionItem& other) const;
+    bool operator==(const CompletionItem& other) const;
+};
+
 // Return every executable name that starts with `prefix` (for tab completion).
-std::vector<str> completions_for(const str& prefix);
-std::vector<str> file_completions(const str& prefix);
-str longest_common_prefix(const std::vector<str>& arr);
+std::vector<CompletionItem> completions_for(const str& prefix);
+std::vector<CompletionItem> file_completions(const str& prefix);
+str longest_common_prefix(const std::vector<CompletionItem>& arr);
 
 namespace command_runner {
     extern bool isActive;
