@@ -165,9 +165,7 @@ namespace command_runner {
         }
     }
 
-    void builtin_pwd(std::vector<str>&) {
-        std::cout << std::filesystem::current_path().string() << '\n';
-    }
+    void builtin_pwd(std::vector<str>& args) { std::cout << std::filesystem::current_path().string() << '\n'; }
 
     void builtin_cd(std::vector<str>& args) {
         if (args.size() > 1) { std::cerr << "cd: too many arguments\n"; return; }
@@ -186,12 +184,15 @@ namespace command_runner {
             std::cerr << "cd: " << target << ": No such file or directory\n";
     }
 
+    void builtin_history(std::vector<str>& args) {}
+
     void setup() {
         cmd_map["echo"] = builtin_echo;
         cmd_map["type"] = builtin_type;
         cmd_map["exit"] = builtin_exit;
         cmd_map["pwd"] = builtin_pwd;
         cmd_map["cd"] = builtin_cd;
+        cmd_map["history"] = builtin_history;
     }
 }
 
