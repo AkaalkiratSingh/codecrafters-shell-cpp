@@ -18,6 +18,7 @@ static int  open_redirect_fd(const Redirect& r);
 namespace command_runner {
     bool isActive = true;
     std::map<str, std::function<void(std::vector<str>&)>> cmd_map;
+    std::vector<str> historyLogs;
 
     // Containers to manage Redirection
     struct RedirectGuard {
@@ -108,6 +109,7 @@ namespace command_runner {
             waitpid(pid, &status, 0);
         }
     }
+
     bool repl() {
         std::cout << "$ ";
 
@@ -115,6 +117,8 @@ namespace command_runner {
         // if (!std::getline(std::cin, line)) return false;
         if (!readline_with_completion(line))    return false;
         if (trim(line).empty())                 return isActive;
+
+        historyLogs.push_back(line);
 
         auto pipelines = parse_line(line);
 
@@ -184,7 +188,10 @@ namespace command_runner {
             std::cerr << "cd: " << target << ": No such file or directory\n";
     }
 
-    void builtin_history(std::vector<str>& args) {}
+    void builtin_history(std::vector<str>& args) {
+        for (int i = 0;i < historyLogs.size();i++)
+            std::cout << i + 1 << " " << historyLogs[i] << '\n';
+    }
 
     void setup() {
         cmd_map["echo"] = builtin_echo;

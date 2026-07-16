@@ -9,6 +9,4 @@ int main() {
     command_runner::setup();
     while (command_runner::repl())
         ;
-
-    
 }
