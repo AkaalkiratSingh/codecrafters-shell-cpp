@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 static void execute_external(const str& exec_path, const Command& cmd);
+static int  open_redirect_fd(const Redirect& r);
 
 namespace command_runner {
     bool isActive = true;
@@ -44,6 +45,69 @@ namespace command_runner {
         }
     };
 
+    static void execute_pipeline(std::vector<Command>& cmds) {
+        std::size_t n = cmds.size();
+        std::vector<std::array<int, 2>> pipes(n - 1);
+
+        for (auto& p : pipes) {
+            if (pipe(p.data()) < 0) { std::perror("pipe"); return; }
+        }
+
+        std::vector<pid_t> pids;
+        pids.reserve(n);
+
+        for (std::size_t i = 0; i < n; ++i) {
+            pid_t pid = fork();
+            if (pid < 0) { std::cerr << "fork failed\n"; continue; }
+
+            if (pid == 0) {
+                if (i > 0)     dup2(pipes[i - 1][0], STDIN_FILENO);
+                if (i < n - 1) dup2(pipes[i][1], STDOUT_FILENO);
+
+                for (auto& p : pipes) { close(p[0]); close(p[1]); }
+
+                const Command& cmd = cmds[i];
+
+                for (const auto& r : cmd.redirects) {
+                    int fd = open_redirect_fd(r);
+                    int target = (r.fd == Redirect::Fd::Stdout) ? STDOUT_FILENO : STDERR_FILENO;
+                    dup2(fd, target);
+                    close(fd);
+                }
+
+                if (cmd_map.contains(cmd.name)) {
+                    std::vector<str> args = cmd.args;
+                    cmd_map[cmd.name](args);
+                    std::exit(0);
+                }
+
+                auto path = find_in_path(cmd.name);
+                if (!path) {
+                    std::cerr << cmd.name << ": command not found\n";
+                    std::exit(127);
+                }
+
+                std::vector<str> argv_strs = { cmd.name };
+                argv_strs.insert(argv_strs.end(), cmd.args.begin(), cmd.args.end());
+                std::vector<char*> argv;
+                argv.reserve(argv_strs.size() + 1);
+                for (auto& s : argv_strs) argv.push_back(s.data());
+                argv.push_back(nullptr);
+
+                execv(path->c_str(), argv.data());
+                std::perror("execv");
+                std::exit(1);
+            }
+
+            pids.push_back(pid);
+        }
+
+        for (auto& p : pipes) { close(p[0]); close(p[1]); }
+        for (pid_t pid : pids) {
+            int status;
+            waitpid(pid, &status, 0);
+        }
+    }
     bool repl() {
         std::cout << "$ ";
 
@@ -52,25 +116,28 @@ namespace command_runner {
         if (!readline_with_completion(line))    return false;
         if (trim(line).empty())                 return isActive;
 
-        auto cmds = parse_line(line);
+        auto pipelines = parse_line(line);
 
         // cmds -> nullopt => if there was some parse error, the error is already printed
-        if (!cmds) return isActive;
+        if (!pipelines) return isActive;
 
-        for (auto& cmd : *cmds) {
-            RedirectGuard guard(cmd.redirects);
+        for (auto& pipeline : *pipelines) {
+            if (pipeline.size() == 1) {
+                auto& cmd = pipeline.front();
+                RedirectGuard guard(cmd.redirects);
 
-            if (cmd_map.contains(cmd.name)) {
-                cmd_map[cmd.name](cmd.args);
-            }
-            else {
-                auto path = find_in_path(cmd.name);
-                if (path) {
-                    execute_external(*path, cmd);
+                if (cmd_map.contains(cmd.name)) {
+                    cmd_map[cmd.name](cmd.args);
                 }
                 else {
-                    std::cerr << cmd.name << ": command not found\n";
+                    auto path = find_in_path(cmd.name);
+
+                    if (path)   execute_external(*path, cmd);
+                    else        std::cerr << cmd.name << ": command not found\n";
                 }
+            }
+            else {
+                execute_pipeline(pipeline);
             }
         }
         return isActive;
@@ -152,7 +219,11 @@ static void execute_external(const str& exec_path, const Command& cmd) {
         // Child: apply redirections then exec
         for (const auto& r : cmd.redirects) {
             int fd = open_redirect_fd(r);
-            int target = (r.fd == Redirect::Fd::Stdout) ? STDOUT_FILENO : STDERR_FILENO;
+
+            int target;
+            if (r.fd == Redirect::Fd::Stdout)   target = STDOUT_FILENO;
+            else                                target = STDERR_FILENO;
+
             dup2(fd, target);
             close(fd);
         }

@@ -40,7 +40,7 @@ struct Command {
     void insert(str tkn);
 };
 
-std::optional<std::vector<Command>> parse_line(const str& line);
+std::optional<std::vector<std::vector<Command>>> parse_line(const str& line);
 
 bool isExecutable(const std::filesystem::path& p);
 std::optional<str> find_in_path(const str& cmd);

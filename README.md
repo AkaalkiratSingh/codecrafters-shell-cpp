@@ -35,13 +35,15 @@ cmake --version
 
 ### Running the Shell
 
+```bash
+# Clone the repository
+git clone https://github.com/AkaalkiratSingh/codecrafters-shell-cpp.git
+cd codecrafters-shell-cpp
+```
+
 - To compile and run the shell locally, you can use the provided shell script `run.sh` which automatically handles the CMake build process:
 
    ```bash
-   # Clone the repository
-   git clone https://github.com/AkaalkiratSingh/codecrafters-shell-cpp.git
-   cd codecrafters-shell-cpp
-
    # Execute the run script
    ./run.sh
    ```

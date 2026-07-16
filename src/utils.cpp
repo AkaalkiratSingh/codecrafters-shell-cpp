@@ -221,61 +221,82 @@ std::vector<RawPiece> split_redirects(const str& seg) {
 }
 
 
-std::optional<std::vector<Command>> parse_line(const str& line) {
-    std::vector<Command> commands;
+// Parse a single pipeline-stage (no `|` or `;` left in it) into a Command.
+static std::optional<Command> parse_command(const str& stage) {
+    // break into text-segments and redirection-operators
+    auto pieces = split_redirects(stage);
+
+    Command cmd;
+    bool expect_target = false;
+    Redirect pending;
+
+    for (auto& piece : pieces) {
+        if (piece.is_redirect_op) {
+            if (expect_target) {
+                std::cerr << "Syntax error: consecutive redirect operators\n";
+                return std::nullopt;
+            }
+            pending = Redirect{ piece.fd, {}, piece.append };
+            expect_target = true;
+        }
+        else {
+            auto tokens = token_values(tokenize(piece.text));
+
+            if (expect_target) {
+                if (tokens.empty()) {
+                    std::cerr << "Syntax error: missing redirect target\n";
+                    return std::nullopt;
+                }
+                // First token is the target; any remainder goes back to words
+                pending.target = tokens.front();
+
+                cmd.redirects.push_back(pending);
+                expect_target = false;
+                for (std::size_t k = 1; k < tokens.size(); ++k) {
+                    cmd.insert(tokens[k]);
+                }
+            }
+            else {
+                for (const auto& t : tokens) {
+                    cmd.insert(t);
+                }
+            }
+        }
+    }
+    if (expect_target) {
+        std::cerr << "Syntax error: redirect with no target\n";
+        return std::nullopt;
+    }
+    return cmd;
+}
+
+std::optional<std::vector<std::vector<Command>>> parse_line(const str& line) {
+    std::vector<std::vector<Command>> pipelines;
 
     for (const str& seg : split(line, ';')) {
         str trimmed = trim(seg);
         if (trimmed.empty()) continue;
 
-        // break into text-segments and redirection-operators
-        auto pieces = split_redirects(trimmed);
+        std::vector<Command> pipeline;
 
-        Command cmd;
-        bool expect_target = false;
-        Redirect pending;
-
-        for (auto& piece : pieces) {
-            if (piece.is_redirect_op) {
-                if (expect_target) {
-                    std::cerr << "Syntax error: consecutive redirect operators\n";
-                    return std::nullopt;
-                }
-                pending = Redirect{ piece.fd, {}, piece.append };
-                expect_target = true;
+        for (const str& stage : split(trimmed, '|')) {
+            str stage_trimmed = trim(stage);
+            if (stage_trimmed.empty()) {
+                std::cerr << "Syntax error: empty command in pipeline\n";
+                return std::nullopt;
             }
-            else {
-                auto tokens = token_values(tokenize(piece.text));
 
-                if (expect_target) {
-                    if (tokens.empty()) {
-                        std::cerr << "Syntax error: missing redirect target\n";
-                        return std::nullopt;
-                    }
-                    // First token is the target; any remainder goes back to words
-                    pending.target = tokens.front();
+            auto cmd = parse_command(stage_trimmed);
+            if (!cmd) return std::nullopt;
 
-                    cmd.redirects.push_back(pending);
-                    expect_target = false;
-                    for (std::size_t k = 1; k < tokens.size(); ++k) {
-                        cmd.insert(tokens[k]);
-                    }
-                }
-                else {
-                    for (const auto& t : tokens) {
-                        cmd.insert(t);
-                    }
-                }
-            }
+            if (!cmd->name.empty())
+                pipeline.push_back(std::move(*cmd));
         }
-        if (expect_target) {
-            std::cerr << "Syntax error: redirect with no target\n";
-            return std::nullopt;
-        }
-        if (!cmd.name.empty())
-            commands.push_back(std::move(cmd));
+
+        if (!pipeline.empty())
+            pipelines.push_back(std::move(pipeline));
     }
-    return commands;
+    return pipelines;
 }
 
 bool isExecutable(const std::filesystem::path& p) {
