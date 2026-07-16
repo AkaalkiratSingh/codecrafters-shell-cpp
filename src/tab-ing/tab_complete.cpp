@@ -39,7 +39,7 @@ namespace {
 
 }
 
-
+static bool is_command_boundary(const str& token_value) { return token_value == "|" || token_value == ";"; }
 
 WordContext get_word_context(const str& line, std::size_t cursor) {
     str upto = line.substr(0, cursor);
@@ -51,15 +51,17 @@ WordContext get_word_context(const str& line, std::size_t cursor) {
             true                    // is_command_position
     };
 
-    if (tokens.back().terminated)
+    if (tokens.back().terminated) {
+        bool is_command_pos = is_command_boundary(tokens.back().value);
         return {
             "",                     // word
-            false                   // is_command_position
-    };
+            is_command_pos          // is_command_position
+        };
+    }
 
     // In between a word
     str word = tokens.back().value;
-    bool is_first = (tokens.size() == 1);
+    bool is_first = (tokens.size() == 1) || is_command_boundary(tokens[tokens.size() - 2].value);
     return { word, is_first };
 }
 
@@ -137,7 +139,7 @@ bool readline_with_completion(str& out) {
 
                 if (lcp.size() > wc.word.size()) {
                     str suffix = lcp.substr(wc.word.size());
-                    if (matches.size() == 1 && !matches[0].is_dir) suffix += ' '; 
+                    if (matches.size() == 1 && !matches[0].is_dir) suffix += ' ';
                     line.insert(cursor, suffix);
                     cursor += suffix.size();
                     redraw(line, cursor);
@@ -150,7 +152,7 @@ bool readline_with_completion(str& out) {
                 else {
                     std::cout << '\n';
                     for (std::size_t i = 0; i < matches.size(); ++i) {
-                        std::cout << matches[i].display;                 
+                        std::cout << matches[i].display;
                         if (i + 1 < matches.size()) std::cout << "  ";
                     }
                     std::cout << '\n';

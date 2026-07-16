@@ -54,6 +54,8 @@ std::vector<Token> tokenize(const str& input, bool force_terminate_at_end) {
         DoubleQ
     };
 
+    auto isCommandBoundary = [](char c) {return c == '|' || c == ';';};
+
     std::vector<Token> result;
     str   cur;
     State state = State::Whitespace;
@@ -86,6 +88,9 @@ std::vector<Token> tokenize(const str& input, bool force_terminate_at_end) {
                 state = State::Default;
                 cur.push_back(input[++i]);
             }
+            else if (isCommandBoundary(c)) {
+                result.push_back({ str(1, c), true });
+            }
             else if (!std::isspace(static_cast<unsigned char>(c))) {
                 cur.push_back(c);
                 state = State::Default;
@@ -111,6 +116,11 @@ std::vector<Token> tokenize(const str& input, bool force_terminate_at_end) {
             }
             else if (c == '\\') {
                 cur.push_back(input[++i]);
+            }
+            else if (isCommandBoundary(c)) {
+                flush(true);
+                result.push_back({ str(1, c), true });
+                state = State::Whitespace;
             }
             else {
                 cur.push_back(c);
@@ -374,7 +384,7 @@ std::vector<CompletionItem> file_completions(const str& prefix) {
             str display_name = name;
             if (entry.is_directory())
                 display_name += '/';
-            
+
             str full_name = dir_part + display_name;
 
             matches.push_back({

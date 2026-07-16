@@ -189,8 +189,22 @@ namespace command_runner {
     }
 
     void builtin_history(std::vector<str>& args) {
-        for (int i = 0;i < historyLogs.size();i++)
-            std::cout << i + 1 << " " << historyLogs[i] << '\n';
+        if (args.empty())
+            for (int i = 0;i < historyLogs.size();i++)
+                std::cout << i + 1 << ' ' << historyLogs[i] << '\n';
+        else {
+            int num;
+            try {
+                num = std::stoi(args[0]);
+            }
+            catch (const std::exception& e) {
+                std::cerr << "Invalid Syntax \nCorrect Usage : `history [n]` where n is a positive number \n";
+                return;
+            }
+
+            for (int i = historyLogs.size() - num;i < historyLogs.size();i++)
+                std::cout << i + 1 << ' ' << historyLogs[i] << '\n';
+        }
     }
 
     void setup() {
