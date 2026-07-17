@@ -1,5 +1,5 @@
 #include "utils.hpp"
-#include "tab-ing/tab_complete.hpp"
+#include "CustomReadline/CustomReadline.hpp"
 
 #include <cstdlib>
 #include <filesystem>
@@ -18,6 +18,7 @@ static int  open_redirect_fd(const Redirect& r);
 namespace command_runner {
     bool isActive = true;
     std::map<str, std::function<void(std::vector<str>&)>> cmd_map;
+    std::map<str, std::vector<str>> alias_map;
     std::vector<str> historyLogs;
 
     // Containers to manage Redirection
@@ -207,13 +208,25 @@ namespace command_runner {
         }
     }
 
-    void setup() {
+
+    void setupCmdMap() {
         cmd_map["echo"] = builtin_echo;
         cmd_map["type"] = builtin_type;
         cmd_map["exit"] = builtin_exit;
         cmd_map["pwd"] = builtin_pwd;
         cmd_map["cd"] = builtin_cd;
         cmd_map["history"] = builtin_history;
+    }
+    void setupAliasMap() {
+        alias_map["ls"] = { "ls","--color=auto" };
+        alias_map["grep"] = { "grep","--color=auto" };
+        alias_map["egrep"] = { "egrep","--color=auto" };
+        alias_map["fgrep"] = { "fgrep","--color=auto" };
+    }
+
+    void setup() {
+        setupCmdMap();
+        setupAliasMap();
     }
 }
 

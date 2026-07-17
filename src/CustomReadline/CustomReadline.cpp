@@ -1,4 +1,4 @@
-#include "tab_complete.hpp"
+#include "CustomReadline.hpp"
 #include "../utils.hpp"
 
 #include <termios.h>
@@ -78,12 +78,43 @@ bool readline_with_completion(str& out) {
             return !line.empty();
         }
 
+        if (c == '\033') {                 // ESC
+            char seq[2];
+            if (read(STDIN_FILENO, &seq[0], 1) <= 0) continue;
+            if (read(STDIN_FILENO, &seq[1], 1) <= 0) continue;
+            if (seq[0] == '[') {
+                switch (seq[1]) {
+                case 'A': /* Up    */ break;
+                case 'B': /* Down  */ break;
+                case 'C':
+                    if (cursor < line.size()) {
+                        cursor++;
+                        redraw(line, cursor);
+                    }
+                    break;
+                case 'D':
+                    if (cursor > 0) {
+                        cursor--;
+                        redraw(line, cursor);
+                    }
+                    break;
+                }
+            }
+            continue;
+        }
+
         if (c != '\t') tab_remains = false;
 
         if (c == '\n' || c == '\r') {
             std::cout << '\n';
             out = line;
             return true;
+        }
+
+        if (c == 12) {                        // Ctrl + L
+            std::cout << "\033[H\033[2J";
+            redraw(line, cursor);
+            continue;
         }
 
         if (c == 4) {                         // Ctrl + D

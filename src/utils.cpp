@@ -46,7 +46,7 @@ str stringify(const std::vector<str>& tokens, std::size_t from) {
     return result;
 }
 
-std::vector<Token> tokenize(const str& input, bool force_terminate_at_end) {
+std::vector<Token> tokenize(const str& input, bool force_terminate_at_end, bool alias_complete) {
     enum class State {
         Whitespace,
         Default,
@@ -61,7 +61,12 @@ std::vector<Token> tokenize(const str& input, bool force_terminate_at_end) {
     State state = State::Whitespace;
 
     auto flush = [&](bool term) {
-        if (!result.empty() && !result.back().terminated) {
+
+        if (alias_complete && command_runner::alias_map.contains(cur)) {
+            for (str w : command_runner::alias_map[cur])
+                result.push_back({ w,true });
+        }
+        else if (!result.empty() && !result.back().terminated) {
             result.back().value += cur;
             result.back().terminated = term;
         }
@@ -232,7 +237,7 @@ std::vector<RawPiece> split_redirects(const str& seg) {
 
 
 // Parse a single pipeline-stage (no `|` or `;` left in it) into a Command.
-static std::optional<Command> parse_command(const str& stage) {
+static std::optional<Command> parse_command(const str& stage, bool alias_complete) {
     // break into text-segments and redirection-operators
     auto pieces = split_redirects(stage);
 
@@ -250,7 +255,7 @@ static std::optional<Command> parse_command(const str& stage) {
             expect_target = true;
         }
         else {
-            auto tokens = token_values(tokenize(piece.text));
+            auto tokens = token_values(tokenize(piece.text, true, true));
 
             if (expect_target) {
                 if (tokens.empty()) {
@@ -280,7 +285,7 @@ static std::optional<Command> parse_command(const str& stage) {
     return cmd;
 }
 
-std::optional<std::vector<std::vector<Command>>> parse_line(const str& line) {
+std::optional<std::vector<std::vector<Command>>> parse_line(const str& line, bool alias_complete) {
     std::vector<std::vector<Command>> pipelines;
 
     for (const str& seg : split(line, ';')) {
@@ -296,7 +301,7 @@ std::optional<std::vector<std::vector<Command>>> parse_line(const str& line) {
                 return std::nullopt;
             }
 
-            auto cmd = parse_command(stage_trimmed);
+            auto cmd = parse_command(stage_trimmed, alias_complete);
             if (!cmd) return std::nullopt;
 
             if (!cmd->name.empty())

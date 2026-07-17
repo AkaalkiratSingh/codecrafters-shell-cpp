@@ -19,7 +19,7 @@ struct Token {
     str  value;
     bool terminated = true;
 };
-std::vector<Token> tokenize(const str& s, bool force_terminate_at_end = true);
+std::vector<Token> tokenize(const str& s, bool force_terminate_at_end = true, bool alias_complete = false);
 std::vector<str> token_values(const std::vector<Token>& tokens);
 
 // Container that manages Redirection
@@ -40,7 +40,7 @@ struct Command {
     void insert(str tkn);
 };
 
-std::optional<std::vector<std::vector<Command>>> parse_line(const str& line);
+std::optional<std::vector<std::vector<Command>>> parse_line(const str& line, bool alias_complete = false);
 
 bool isExecutable(const std::filesystem::path& p);
 std::optional<str> find_in_path(const str& cmd);
@@ -62,6 +62,7 @@ str longest_common_prefix(const std::vector<CompletionItem>& arr);
 namespace command_runner {
     extern bool isActive;
     extern std::map<str, std::function<void(std::vector<str>&)>> cmd_map;
+    extern std::map<str, std::vector<str>> alias_map;
 
     bool repl();
     void setup();
