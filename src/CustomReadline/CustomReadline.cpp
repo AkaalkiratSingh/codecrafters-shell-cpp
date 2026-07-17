@@ -71,6 +71,9 @@ bool readline_with_completion(str& out) {
     int cursor = 0;
     bool tab_remains = false;
 
+    int c_pointer = command_runner::historyLogs.size(); // pointer to the currently focussed command;
+    str storedLine;
+
     while (true) {
         char c;
         if (read(STDIN_FILENO, &c, 1) <= 0) {
@@ -84,15 +87,37 @@ bool readline_with_completion(str& out) {
             if (read(STDIN_FILENO, &seq[1], 1) <= 0) continue;
             if (seq[0] == '[') {
                 switch (seq[1]) {
-                case 'A': /* Up    */ break;
-                case 'B': /* Down  */ break;
-                case 'C':
+                case 'A':                   // Up Arrow
+                    if (c_pointer <= 0) break;
+
+                    if (c_pointer == command_runner::historyLogs.size())    // was at the new command
+                        storedLine = line;
+
+                    c_pointer--;
+                    line = command_runner::historyLogs[c_pointer];
+                    cursor = line.size();
+                    redraw(line, cursor);
+
+                    break;
+                case 'B':                   // Down Arrow
+                    if (c_pointer == command_runner::historyLogs.size()) break;
+
+                    c_pointer++;
+                    if (c_pointer == command_runner::historyLogs.size())
+                        line = storedLine;
+                    else
+                        line = command_runner::historyLogs[c_pointer];
+                    cursor = line.size();
+                    redraw(line, cursor);
+
+                    break;
+                case 'C':                   // Right Arrow
                     if (cursor < line.size()) {
                         cursor++;
                         redraw(line, cursor);
                     }
                     break;
-                case 'D':
+                case 'D':                   // Left Arrow
                     if (cursor > 0) {
                         cursor--;
                         redraw(line, cursor);
@@ -102,6 +127,10 @@ bool readline_with_completion(str& out) {
             }
             continue;
         }
+
+        // if none of the arrow are pressed
+        c_pointer = command_runner::historyLogs.size();
+        storedLine = "";
 
         if (c != '\t') tab_remains = false;
 

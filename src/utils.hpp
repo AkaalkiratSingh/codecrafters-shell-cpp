@@ -63,6 +63,7 @@ namespace command_runner {
     extern bool isActive;
     extern std::map<str, std::function<void(std::vector<str>&)>> cmd_map;
     extern std::map<str, std::vector<str>> alias_map;
+    extern std::vector<str> historyLogs;
 
     bool repl();
     void setup();
