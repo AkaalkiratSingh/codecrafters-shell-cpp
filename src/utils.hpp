@@ -44,6 +44,7 @@ std::optional<std::vector<std::vector<Command>>> parse_line(const str& line, boo
 
 bool isExecutable(const std::filesystem::path& p);
 std::optional<str> find_in_path(const str& cmd);
+str resolve_path(const str& p);
 
 struct CompletionItem {
     str  full;
@@ -64,6 +65,7 @@ namespace command_runner {
     extern std::map<str, std::function<void(std::vector<str>&)>> cmd_map;
     extern std::map<str, std::vector<str>> alias_map;
     extern std::vector<str> historyLogs;
+    extern std::map<str, std::size_t> historyWriteIndex; // the index to what history has been writen to a given file 
 
     bool repl();
     void setup();

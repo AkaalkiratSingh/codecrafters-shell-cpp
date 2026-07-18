@@ -314,6 +314,12 @@ std::optional<std::vector<std::vector<Command>>> parse_line(const str& line, boo
     return pipelines;
 }
 
+str resolve_path(const str& p) {
+    std::error_code ec;
+    auto resolved = std::filesystem::weakly_canonical(p, ec);
+    return ec ? p : resolved.string();   // fall back to raw path if resolution fails
+}
+
 bool isExecutable(const std::filesystem::path& p) {
     std::error_code ec;
     if (!std::filesystem::is_regular_file(p, ec)) return false;
