@@ -20,6 +20,7 @@ namespace command_runner {
     std::map<str, std::function<void(std::vector<str>&)>> cmd_map;
     std::map<str, std::vector<str>> alias_map;
     std::vector<str> historyLogs;
+    std::map<str, std::size_t> historyWriteIndex;
 
     // Containers to manage Redirection
     struct RedirectGuard {
