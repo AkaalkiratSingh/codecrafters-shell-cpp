@@ -291,6 +291,15 @@ namespace command_runner {
         // alias_map["egrep"] = { "egrep","--color=auto" };
         // alias_map["fgrep"] = { "fgrep","--color=auto" };
     }
+    void loadHistoryFromEnv() {
+        const char* histfile = std::getenv("HISTFILE");
+        if (!histfile) return;
+
+        str path = histfile;
+
+        std::vector<str> args = { "-r",path };
+        builtin_history(args);
+    }
 
     void setup() {
         setupCmdMap();
