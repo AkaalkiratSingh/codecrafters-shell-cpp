@@ -213,6 +213,7 @@ namespace command_runner {
             while (std::getline(file, line))
                 if (!line.empty())
                     historyLogs.push_back(line);
+            
             return;
         }
 
@@ -232,6 +233,8 @@ namespace command_runner {
             for (const str& line : historyLogs)
                 file << line << '\n';
             file << '\n';
+
+            return;
         }
 
         // Numerical input
