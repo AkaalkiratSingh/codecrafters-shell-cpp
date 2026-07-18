@@ -236,6 +236,25 @@ namespace command_runner {
             return;
         }
 
+        // Appending Input
+        if (args[0] == "-a") {
+            if (args.size() == 1) {
+                std::cerr << "history: target file not provided\n";
+                return;
+            }
+
+            std::ofstream file(args[1],std::ios::app);
+            if (!file) {
+                std::cerr << "history: cannot open " << args[1] << '\n';
+                return;
+            }
+
+            for (const str& line : historyLogs)
+                file << line << '\n';
+
+            return;
+        }
+
         // Numerical input
         int num;
         try {
