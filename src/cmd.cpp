@@ -308,6 +308,7 @@ namespace command_runner {
         str path = histfile;
         std::vector<str> args = { "-a",path };
         builtin_history(args);
+        historyWriteIndex[resolve_path(histfile)] = historyLogs.size();
     }
 
     void setup() {
