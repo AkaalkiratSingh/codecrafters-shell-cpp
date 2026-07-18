@@ -301,6 +301,15 @@ namespace command_runner {
         builtin_history(args);
     }
 
+    void flushHistoryToHistFile() {
+        const char* histfile = std::getenv("HISTFILE");
+        if (!histfile) return;
+
+        str path = histfile;
+        std::vector<str> args = { "-a",path };
+        builtin_history(args);
+    }
+
     void setup() {
         setupCmdMap();
         setupAliasMap();

@@ -69,4 +69,6 @@ namespace command_runner {
 
     bool repl();
     void setup();
+
+    void flushHistoryToHistFile();
 }
