@@ -196,16 +196,19 @@ namespace command_runner {
             return;
         }
 
+        // Read Flag
         if (args[0] == "-r") {
             if (args.size() == 1) {    // -r ke baad file nhi di
-                std::cerr << "Target file not provided\n";
+                std::cerr << "history: target file not provided\n";
                 return;
             }
+
             std::ifstream file(args[1]);
             if (!file) {
                 std::cerr << "history: cannot open " << args[1] << '\n';
                 return;
             }
+
             str line;
             while (std::getline(file, line))
                 if (!line.empty())
@@ -213,12 +216,31 @@ namespace command_runner {
             return;
         }
 
+        // Write Flag
+        if (args[0] == "-w") {
+            if (args.size() == 1) {
+                std::cerr << "history: target file not provided\n";
+                return;
+            }
+
+            std::ofstream file(args[1]);
+            if (!file) {
+                std::cerr << "history: cannot open " << args[1] << '\n';
+                return;
+            }
+
+            for (const str& line : historyLogs)
+                file << line << '\n';
+            file << '\n';
+        }
+
+        // Numerical input
         int num;
         try {
             num = std::stoi(args[0]);
         }
         catch (const std::exception& e) {
-            std::cerr << "Invalid Syntax \nCorrect Usage : `history [n]` where n is a positive number \n";
+            std::cerr << "history: Invalid Syntax \nCorrect Usage : `history [n]` where n is a positive number \n";
             return;
         }
 
