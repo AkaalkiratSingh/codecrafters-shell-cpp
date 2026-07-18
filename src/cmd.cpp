@@ -232,7 +232,6 @@ namespace command_runner {
 
             for (const str& line : historyLogs)
                 file << line << '\n';
-            file << '\n';
 
             return;
         }
