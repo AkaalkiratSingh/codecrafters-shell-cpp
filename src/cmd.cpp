@@ -276,6 +276,10 @@ namespace command_runner {
 
     }
 
+    void builtin_jobs(std::vector<str>& args) {
+
+    }
+
 
     void setupCmdMap() {
         cmd_map["echo"] = builtin_echo;
@@ -284,6 +288,7 @@ namespace command_runner {
         cmd_map["pwd"] = builtin_pwd;
         cmd_map["cd"] = builtin_cd;
         cmd_map["history"] = builtin_history;
+        cmd_map["jobs"] = builtin_jobs;
     }
     void setupAliasMap() {
         // alias_map["ls"] = { "ls","--color=auto" };
