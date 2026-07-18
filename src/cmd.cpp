@@ -213,7 +213,8 @@ namespace command_runner {
             while (std::getline(file, line))
                 if (!line.empty())
                     historyLogs.push_back(line);
-            
+            file.close();
+
             return;
         }
 
@@ -232,6 +233,7 @@ namespace command_runner {
 
             for (const str& line : historyLogs)
                 file << line << '\n';
+            file.close();
 
             return;
         }
@@ -243,7 +245,7 @@ namespace command_runner {
                 return;
             }
 
-            std::ofstream file(args[1],std::ios::app);
+            std::ofstream file(args[1], std::ios::app);
             if (!file) {
                 std::cerr << "history: cannot open " << args[1] << '\n';
                 return;
@@ -251,7 +253,8 @@ namespace command_runner {
 
             for (const str& line : historyLogs)
                 file << line << '\n';
-
+            file.close();
+            
             return;
         }
 
