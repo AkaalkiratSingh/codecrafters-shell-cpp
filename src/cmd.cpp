@@ -304,6 +304,7 @@ namespace command_runner {
     void setup() {
         setupCmdMap();
         setupAliasMap();
+        loadHistoryFromEnv();
     }
 }
 
