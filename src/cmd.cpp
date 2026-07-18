@@ -238,10 +238,10 @@ namespace command_runner {
         cmd_map["history"] = builtin_history;
     }
     void setupAliasMap() {
-        alias_map["ls"] = { "ls","--color=auto" };
-        alias_map["grep"] = { "grep","--color=auto" };
-        alias_map["egrep"] = { "egrep","--color=auto" };
-        alias_map["fgrep"] = { "fgrep","--color=auto" };
+        // alias_map["ls"] = { "ls","--color=auto" };
+        // alias_map["grep"] = { "grep","--color=auto" };
+        // alias_map["egrep"] = { "egrep","--color=auto" };
+        // alias_map["fgrep"] = { "fgrep","--color=auto" };
     }
 
     void setup() {
