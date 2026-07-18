@@ -190,22 +190,42 @@ namespace command_runner {
     }
 
     void builtin_history(std::vector<str>& args) {
-        if (args.empty())
+        if (args.empty()) {
             for (int i = 0;i < historyLogs.size();i++)
                 std::cout << i + 1 << ' ' << historyLogs[i] << '\n';
-        else {
-            int num;
-            try {
-                num = std::stoi(args[0]);
-            }
-            catch (const std::exception& e) {
-                std::cerr << "Invalid Syntax \nCorrect Usage : `history [n]` where n is a positive number \n";
+            return;
+        }
+
+        if (args[0] == "-r") {
+            if (args.size() == 1) {    // -r ke baad file nhi di
+                std::cerr << "Target file not provided\n";
                 return;
             }
-
-            for (int i = historyLogs.size() - num;i < historyLogs.size();i++)
-                std::cout << i + 1 << ' ' << historyLogs[i] << '\n';
+            std::ifstream file(args[1]);
+            if (!file) {
+                std::cerr << "history: cannot open " << args[1] << '\n';
+                return;
+            }
+            str line;
+            while (std::getline(file, line))
+                if (!line.empty())
+                    historyLogs.push_back(line);
+            return;
         }
+
+        int num;
+        try {
+            num = std::stoi(args[0]);
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Invalid Syntax \nCorrect Usage : `history [n]` where n is a positive number \n";
+            return;
+        }
+
+        int start = std::max(0, (int)historyLogs.size() - num);
+        for (int i = start;i < historyLogs.size();i++)
+            std::cout << i + 1 << ' ' << historyLogs[i] << '\n';
+
     }
 
 
@@ -218,10 +238,10 @@ namespace command_runner {
         cmd_map["history"] = builtin_history;
     }
     void setupAliasMap() {
-        // alias_map["ls"] = { "ls","--color=auto" };
-        // alias_map["grep"] = { "grep","--color=auto" };
-        // alias_map["egrep"] = { "egrep","--color=auto" };
-        // alias_map["fgrep"] = { "fgrep","--color=auto" };
+        alias_map["ls"] = { "ls","--color=auto" };
+        alias_map["grep"] = { "grep","--color=auto" };
+        alias_map["egrep"] = { "egrep","--color=auto" };
+        alias_map["fgrep"] = { "fgrep","--color=auto" };
     }
 
     void setup() {
