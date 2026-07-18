@@ -299,6 +299,7 @@ namespace command_runner {
 
         std::vector<str> args = { "-r",path };
         builtin_history(args);
+        historyWriteIndex[resolve_path(histfile)] = historyLogs.size();
     }
 
     void flushHistoryToHistFile() {
@@ -308,7 +309,6 @@ namespace command_runner {
         str path = histfile;
         std::vector<str> args = { "-a",path };
         builtin_history(args);
-        historyWriteIndex[resolve_path(histfile)] = historyLogs.size();
     }
 
     void setup() {
