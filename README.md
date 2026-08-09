@@ -77,7 +77,7 @@ cmake --version
 
 ```bash
 # Clone the repository
-git clone https://github.com/AkaalkiratSingh/codecrafters-shell-cpp.git
+git clone https://github.com/AkaalkiratSingh/CHELL_PLUS_PLUS.git
 cd codecrafters-shell-cpp
 ```
 
@@ -100,58 +100,58 @@ cd codecrafters-shell-cpp
 
 - **Builtins and PATH resolution**
 
-   ```
-   $ echo "Hello World!"
-   Hello World!
-   $ type cd
-   cd is a shell builtin
-   $ type cat
-   cat is /usr/bin/cat
-   $ pwd
-   /home/user/codecrafters-shell-cpp
-   $ cd ..
-   $ pwd
-   /home/user
-   ```
+  ```
+  $ echo "Hello World!"
+  Hello World!
+  $ type cd
+  cd is a shell builtin
+  $ type cat
+  cat is /usr/bin/cat
+  $ pwd
+  /home/user/codecrafters-shell-cpp
+  $ cd ..
+  $ pwd
+  /home/user
+  ```
 
 - **Pipelines and redirection**
 
-   ```
-   $ cat file.txt | grep error | wc -l
-   3
-   $ echo "logged" >> run.log
-   $ ls nonexistent_dir 2> errors.log
-   $ cat errors.log
-   ls: cannot access 'nonexistent_dir': No such file or directory
-   ```
+  ```
+  $ cat file.txt | grep error | wc -l
+  3
+  $ echo "logged" >> run.log
+  $ ls nonexistent_dir 2> errors.log
+  $ cat errors.log
+  ls: cannot access 'nonexistent_dir': No such file or directory
+  ```
 
 - **Quoting**
 
-   ```
-   $ echo "spaces   are preserved"
-   spaces   are preserved
-   $ echo 'single $HOME stays literal'
-   single $HOME stays literal
-   ```
+  ```
+  $ echo "spaces   are preserved"
+  spaces   are preserved
+  $ echo 'single $HOME stays literal'
+  single $HOME stays literal
+  ```
 
 - **History**
 
-   ```
-   $ history
-   1 echo "Hello World!"
-   2 type cd
-   3 pwd
-   4 cd ..
-   5 pwd
-   6 history
-   $
-   $ history 5
-   3 pwd
-   4 cd ..
-   5 pwd
-   6 history
-   7 history 5
-   ```
+  ```
+  $ history
+  1 echo "Hello World!"
+  2 type cd
+  3 pwd
+  4 cd ..
+  5 pwd
+  6 history
+  $
+  $ history 5
+  3 pwd
+  4 cd ..
+  5 pwd
+  6 history
+  7 history 5
+  ```
 
 ## Project Structure
 
