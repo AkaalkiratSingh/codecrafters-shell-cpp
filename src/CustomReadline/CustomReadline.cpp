@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <iostream>
 
+static bool is_command_boundary(const str& token_value) { return token_value == "|" || token_value == ";"; }
+
 namespace {
     struct RawMode {
         termios saved{};
@@ -37,32 +39,29 @@ namespace {
         std::cout.flush();
     }
 
-}
+    WordContext get_word_context(const str& line, std::size_t cursor) {
+        str upto = line.substr(0, cursor);
+        auto tokens = tokenize(upto, false);
 
-static bool is_command_boundary(const str& token_value) { return token_value == "|" || token_value == ";"; }
-
-WordContext get_word_context(const str& line, std::size_t cursor) {
-    str upto = line.substr(0, cursor);
-    auto tokens = tokenize(upto, false);
-
-    if (tokens.empty())
-        return {
-            "",                     // word
-            true                    // is_command_position
-    };
-
-    if (tokens.back().terminated) {
-        bool is_command_pos = is_command_boundary(tokens.back().value);
-        return {
-            "",                     // word
-            is_command_pos          // is_command_position
+        if (tokens.empty())
+            return {
+                "",                     // word
+                true                    // is_command_position
         };
-    }
 
-    // In between a word
-    str word = tokens.back().value;
-    bool is_first = (tokens.size() == 1) || is_command_boundary(tokens[tokens.size() - 2].value);
-    return { word, is_first };
+        if (tokens.back().terminated) {
+            bool is_command_pos = is_command_boundary(tokens.back().value);
+            return {
+                "",                     // word
+                is_command_pos          // is_command_position
+            };
+        }
+
+        // In between a word
+        str word = tokens.back().value;
+        bool is_first = (tokens.size() == 1) || is_command_boundary(tokens[tokens.size() - 2].value);
+        return { word, is_first };
+    }
 }
 
 bool readline_with_completion(str& out) {
@@ -180,7 +179,6 @@ bool readline_with_completion(str& out) {
                         matches.push_back({ name,name,false });
             }
             else {
-                ///// TODO: filesystem-based completion, wired in next
                 matches = file_completions(wc.word);
             }
 

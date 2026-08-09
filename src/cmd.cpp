@@ -116,7 +116,6 @@ namespace command_runner {
         std::cout << "$ ";
 
         str line;
-        // if (!std::getline(std::cin, line)) return false;
         if (!readline_with_completion(line))    return false;
         if (trim(line).empty())                 return isActive;
 
@@ -171,7 +170,7 @@ namespace command_runner {
         }
     }
 
-    void builtin_pwd(std::vector<str>& args) { std::cout << std::filesystem::current_path().string() << '\n'; }
+    void builtin_pwd(std::vector<str>&) { std::cout << std::filesystem::current_path().string() << '\n'; }
 
     void builtin_cd(std::vector<str>& args) {
         if (args.size() > 1) { std::cerr << "cd: too many arguments\n"; return; }
@@ -192,7 +191,7 @@ namespace command_runner {
 
     void builtin_history(std::vector<str>& args) {
         if (args.empty()) {
-            for (int i = 0;i < historyLogs.size();i++)
+            for (size_t i = 0;i < historyLogs.size();i++)
                 std::cout << i + 1 << ' ' << historyLogs[i] << '\n';
             return;
         }
@@ -276,11 +275,6 @@ namespace command_runner {
 
     }
 
-    void builtin_jobs(std::vector<str>& args) {
-
-    }
-
-
     void setupCmdMap() {
         cmd_map["echo"] = builtin_echo;
         cmd_map["type"] = builtin_type;
@@ -288,13 +282,12 @@ namespace command_runner {
         cmd_map["pwd"] = builtin_pwd;
         cmd_map["cd"] = builtin_cd;
         cmd_map["history"] = builtin_history;
-        cmd_map["jobs"] = builtin_jobs;
     }
     void setupAliasMap() {
-        // alias_map["ls"] = { "ls","--color=auto" };
-        // alias_map["grep"] = { "grep","--color=auto" };
-        // alias_map["egrep"] = { "egrep","--color=auto" };
-        // alias_map["fgrep"] = { "fgrep","--color=auto" };
+        alias_map["ls"] = { "ls","--color=auto" };
+        alias_map["grep"] = { "grep","--color=auto" };
+        alias_map["egrep"] = { "egrep","--color=auto" };
+        alias_map["fgrep"] = { "fgrep","--color=auto" };
     }
     void loadHistoryFromEnv() {
         const char* histfile = std::getenv("HISTFILE");
