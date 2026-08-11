@@ -62,7 +62,7 @@ std::vector<Token> tokenize(const str& input, bool force_terminate_at_end, bool 
 
     auto flush = [&](bool term) {
 
-        if (alias_complete && command_runner::alias_map.contains(cur)) {
+        if (result.empty() && alias_complete && command_runner::alias_map.contains(cur)) {
             for (str w : command_runner::alias_map[cur])
                 result.push_back({ w,true });
         }

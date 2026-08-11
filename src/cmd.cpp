@@ -161,7 +161,13 @@ namespace command_runner {
 
     void builtin_type(std::vector<str>& args) {
         for (const auto& name : args) {
-            if (cmd_map.contains(name))
+            if (alias_map.contains(name)) {
+                std::cout << name << " is an alias for ";
+                for (auto s : alias_map[name])
+                    std::cout << s << ' ';
+                std::cout << '\n';
+            }
+            else if (cmd_map.contains(name))
                 std::cout << name << " is a shell builtin\n";
             else if (auto path = find_in_path(name))
                 std::cout << name << " is " << *path << '\n';
